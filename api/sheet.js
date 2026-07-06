@@ -5,12 +5,14 @@
  *
  * Vercel env: VITE_SHEET_API_URL (yoki SHEET_API_URL) o'rnatilishi kerak.
  */
+const DEFAULT_SHEET_API_URL =
+  "https://script.google.com/macros/s/AKfycbxEgAaIvVp4H93SlGRa3Ue78s3p6fXN6ZkMKReryPAxZQkWv9ToGhI6OpBzDUYKurSDnA/exec";
+
 export default async function handler(req, res) {
-  const url = process.env.SHEET_API_URL || process.env.VITE_SHEET_API_URL;
-  if (!url) {
-    res.status(500).json({ error: "SHEET_API_URL o'rnatilmagan" });
-    return;
-  }
+  const url =
+    process.env.SHEET_API_URL ||
+    process.env.VITE_SHEET_API_URL ||
+    DEFAULT_SHEET_API_URL;
 
   try {
     if (req.method === "POST") {
