@@ -31,8 +31,12 @@ export default function TwoGisMap() {
     <>
       <div ref={containerRef} className="h-full w-full" />
       <CadastralModal
-        key={selected?.cadastralNumber ?? "none"}
-        building={selected}
+        key={
+          selected
+            ? `${selected.landCadastralNumber}|${selected.cadastralNumbers.length}|${selected.cadastralNumbers[0] ?? ""}`
+            : "none"
+        }
+        selection={selected}
         onClose={clearSelected}
         onSave={handleSave}
       />

@@ -22,8 +22,12 @@ export interface PolygonsResponse {
   data: LandItem[];
 }
 
-/** Bino poligoni bosilganda deviderda ko'rsatiladigan ma'lumot */
-export interface SelectedBuilding {
+/**
+ * Poligon bosilganda modalga uzatiladigan tanlov.
+ * Building click → `cadastralNumbers` bitta elementli.
+ * Land click → o'sha yerdagi barcha bino cadastralNumberlari (select uchun).
+ */
+export interface CadastralSelection {
   landCadastralNumber: string;
-  cadastralNumber: string;
+  cadastralNumbers: string[];
 }

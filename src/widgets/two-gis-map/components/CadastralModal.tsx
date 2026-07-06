@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Modal } from "@/shared/ui/Modal";
-import type { SelectedBuilding } from "../types";
+import type { CadastralSelection } from "../types";
 
 interface CadastralModalProps {
-  building: SelectedBuilding | null;
+  selection: CadastralSelection | null;
   onClose: () => void;
   /** Validatsiyadan o'tgach chaqiriladi; POST + refetch tashqarida bajariladi. */
   onSave: (record: {
@@ -12,23 +12,27 @@ interface CadastralModalProps {
   }) => Promise<void>;
 }
 
+const inputClass =
+  "w-full rounded-lg border border-line bg-neutral-0 px-3 py-2 font-mono text-neutral-900 outline-none focus:border-primary-600";
+
 /**
- * Bino poligoni bosilganda ochiladigan modal:
+ * Poligon bosilganda ochiladigan modal:
  * kadastr raqamlari + "madaniy meros sifatida saqlaysizmi?" savoli.
+ * Building click → bitta bino (input). Land click → binolardan select.
  */
 export function CadastralModal({
-  building,
+  selection,
   onClose,
   onSave,
 }: CadastralModalProps) {
-  // Inputlar bino ma'lumoti bilan to'ldiriladi. Boshqa bino tanlanganda
-  // parent `key` orqali komponentni remount qiladi — state qayta init bo'ladi.
+  const options = selection?.cadastralNumbers ?? [];
+  const isSelect = options.length > 1;
+
+  // State parent `key` orqali har yangi tanlovda qayta init bo'ladi (effektsiz).
   const [landCadastralNumber, setLandCadastralNumber] = useState(
-    building?.landCadastralNumber ?? "",
+    selection?.landCadastralNumber ?? "",
   );
-  const [cadastralNumber, setCadastralNumber] = useState(
-    building?.cadastralNumber ?? "",
-  );
+  const [cadastralNumber, setCadastralNumber] = useState(options[0] ?? "");
   const [saving, setSaving] = useState(false);
 
   const handleYes = async () => {
@@ -49,7 +53,7 @@ export function CadastralModal({
   };
 
   return (
-    <Modal open={!!building} onClose={onClose} title="Obyekt ma'lumoti">
+    <Modal open={!!selection} onClose={onClose} title="Obyekt ma'lumoti">
       <div className="flex flex-col gap-4">
         <label className="block">
           <span className="mb-1 block text-sm font-medium text-neutral-900">
@@ -60,7 +64,8 @@ export function CadastralModal({
             value={landCadastralNumber}
             onChange={(e) => setLandCadastralNumber(e.target.value)}
             aria-label="Yer kadastr raqami"
-            className="w-full rounded-lg border border-line bg-neutral-0 px-3 py-2 font-mono text-neutral-900 outline-none focus:border-primary-600"
+            className={inputClass}
+            disabled={true}
           />
         </label>
 
@@ -68,13 +73,28 @@ export function CadastralModal({
           <span className="mb-1 block text-sm font-medium text-neutral-900">
             Bino kadastr raqami
           </span>
-          <input
-            type="text"
-            value={cadastralNumber}
-            onChange={(e) => setCadastralNumber(e.target.value)}
-            aria-label="Bino kadastr raqami"
-            className="w-full rounded-lg border border-line bg-neutral-0 px-3 py-2 font-mono text-neutral-900 outline-none focus:border-primary-600"
-          />
+          {isSelect ? (
+            <select
+              value={cadastralNumber}
+              onChange={(e) => setCadastralNumber(e.target.value)}
+              aria-label="Bino kadastr raqami"
+              className={inputClass}
+            >
+              {options.map((cad) => (
+                <option key={cad} value={cad}>
+                  {cad}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <input
+              type="text"
+              value={cadastralNumber}
+              onChange={(e) => setCadastralNumber(e.target.value)}
+              aria-label="Bino kadastr raqami"
+              className={inputClass}
+            />
+          )}
         </label>
 
         <p className="text-sm text-neutral-500">

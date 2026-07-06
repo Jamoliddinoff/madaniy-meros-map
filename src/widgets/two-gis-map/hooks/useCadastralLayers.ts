@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { destroyMapGLObject } from "@/shared/lib/mapgl";
 import { parseWktPolygon } from "@/shared/utils/parseWkt";
 import polygonsData from "@/shared/constants/poligons.json";
-import type { MapRef, PolygonsResponse, SelectedBuilding } from "../types";
+import type { MapRef, PolygonsResponse, CadastralSelection } from "../types";
 
 const { data } = polygonsData as PolygonsResponse;
 
@@ -26,7 +26,7 @@ export function useCadastralLayers(
   enabled: boolean,
   cadastralSet: Set<string>,
 ) {
-  const [selected, setSelected] = useState<SelectedBuilding | null>(null);
+  const [selected, setSelected] = useState<CadastralSelection | null>(null);
 
   useEffect(() => {
     if (!enabled || !mapRef.current || !window.mapgl) return;
@@ -35,19 +35,23 @@ export function useCadastralLayers(
     const objects: any[] = [];
 
     for (const land of data) {
-      // Yer chegarasi — faqat border, ichi shaffof
+      // Yer chegarasi — faqat border, ichi shaffof; bosilganda land modal (select)
       if (land.geometry) {
         try {
-          objects.push(
-            new window.mapgl.Polygon(map, {
-              coordinates: parseWktPolygon(land.geometry),
-              color: "rgba(0,0,0,0)",
-              strokeColor: "#2957a5",
-              strokeWidth: 2,
-              interactive: false,
-              zIndex: 10,
+          const landPolygon = new window.mapgl.Polygon(map, {
+            coordinates: parseWktPolygon(land.geometry),
+            color: "rgba(0,0,0,0)",
+            strokeColor: "#2957a5",
+            strokeWidth: 2,
+            zIndex: 10,
+          });
+          landPolygon.on("click", () =>
+            setSelected({
+              landCadastralNumber: land.landCadastralNumber,
+              cadastralNumbers: land.buildings.map((b) => b.cadastralNumber),
             }),
           );
+          objects.push(landPolygon);
         } catch (e) {
           console.warn("Land polygon error:", e);
         }
@@ -68,7 +72,7 @@ export function useCadastralLayers(
           polygon.on("click", () =>
             setSelected({
               landCadastralNumber: land.landCadastralNumber,
-              cadastralNumber: building.cadastralNumber,
+              cadastralNumbers: [building.cadastralNumber],
             }),
           );
           objects.push(polygon);
