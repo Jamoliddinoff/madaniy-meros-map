@@ -1,0 +1,48 @@
+@import "tailwindcss";
+
+/* ── Dizayn tokenlari (Tailwind v4 @theme) ────────────────────────────── */
+@theme {
+  /* Brand primary */
+  --color-primary-300: #7aa2e0;
+  --color-primary-600: #2957a5;
+  --color-primary-700: #1f4485;
+
+  /* Brand variants */
+  --color-brand-dark: #2957a5;
+  --color-brand-cyan: #00b0f0;
+
+  /* Neutral */
+  --color-neutral-0: #ffffff;
+  --color-neutral-50: #f7f9fc;
+  --color-neutral-100: #eef2f7;
+  --color-neutral-400: #8a94a6;
+  --color-neutral-500: #6b7280;
+  --color-neutral-900: #111827;
+
+  /* Line / border */
+  --color-line: #dee5ed;
+
+  /* Semantic */
+  --color-error-dark: #b42318;
+
+  /* Shadow */
+  --shadow-header: 0 2px 8px rgba(17, 24, 39, 0.08);
+
+  /* Z-index */
+  --z-index-dropdown: 100;
+  --z-index-sticky: 200;
+  --z-index-modal: 300;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: system-ui, "Segoe UI", Roboto, sans-serif;
+  color: var(--color-neutral-900);
+  background: var(--color-neutral-50);
+}
