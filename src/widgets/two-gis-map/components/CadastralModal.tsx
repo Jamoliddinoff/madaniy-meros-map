@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Modal } from "@/shared/ui/Modal";
+import { useToast } from "@/shared/ui/toast/toast-context";
 import type { CadastralSelection } from "../types";
 
 interface CadastralModalProps {
@@ -34,19 +35,21 @@ export function CadastralModal({
   );
   const [cadastralNumber, setCadastralNumber] = useState(options[0] ?? "");
   const [saving, setSaving] = useState(false);
+  const { showToast } = useToast();
 
   const handleYes = async () => {
     const land = landCadastralNumber.trim();
     const cad = cadastralNumber.trim();
     if (!land || !cad) {
-      alert("Yer va bino kadastr raqamlari to'ldirilishi shart");
+      showToast("Yer va bino kadastr raqamlari to'ldirilishi shart", "error");
       return;
     }
     setSaving(true);
     try {
       await onSave({ landCadastralNumber: land, cadastralNumber: cad });
+      showToast("Muvaffaqiyatli saqlandi", "success");
     } catch {
-      alert("Saqlashda xatolik yuz berdi");
+      showToast("Saqlashda xatolik yuz berdi", "error");
     } finally {
       setSaving(false);
     }
@@ -108,7 +111,7 @@ export function CadastralModal({
             disabled={saving}
             className="flex-1 rounded-lg bg-primary-600 py-2.5 font-medium text-neutral-0 transition-colors hover:bg-primary-700 disabled:opacity-60"
           >
-            {saving ? "Saqlanmoqda..." : "Ha, saqlaymiz"}
+            {saving ? "Saqlanmoqda..." : "Saqlash"}
           </button>
           <button
             type="button"
