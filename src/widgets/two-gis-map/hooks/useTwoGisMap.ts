@@ -3,6 +3,7 @@ import {
   destroyMapGLObject,
   loadMapGlScript,
   MAPGL_API_KEY,
+  MAPGL_STYLE_IMMERSIVE,
   UZ_CENTER,
   UZ_ZOOM,
 } from "@/shared/lib/mapgl";
@@ -34,6 +35,8 @@ export function useTwoGisMap() {
         pitch: 0,
         rotation: 0,
         key: MAPGL_API_KEY,
+        style: MAPGL_STYLE_IMMERSIVE,
+        styleState: { immersiveRoadsOn: true },
         zoomControl: "bottomRight",
       });
       mapRef.current = map;

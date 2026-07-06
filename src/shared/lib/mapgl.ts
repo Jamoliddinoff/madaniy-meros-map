@@ -18,9 +18,16 @@ declare global {
 export const MAPGL_API_KEY = ENV.twoGisApiKey;
 export const MAPGL_SCRIPT_URL = "https://mapgl.2gis.com/api/js/v1";
 
+/** Immersive 3D style (default) */
+export const MAPGL_STYLE = "8780eed4-0428-4982-b615-aa6cf04d8f5f";
+/** Alias kept for explicit usage */
+export const MAPGL_STYLE_IMMERSIVE = MAPGL_STYLE;
+/** Satellite imagery style */
+export const MAPGL_STYLE_SATELLITE = "c080bb6a-8134-4993-93a1-5b4d8c36a59b";
+
 /** O'zbekiston markazi [lng, lat] */
 export const UZ_CENTER: [number, number] = [64.5853, 41.3775];
-export const UZ_ZOOM = 5.5;
+export const UZ_ZOOM = 6.3;
 
 // ── Script yuklovchi (idempotent) ───────────────────────────────────────────────
 

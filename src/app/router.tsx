@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components -- route config, komponent moduli emas */
 import { lazy } from "react";
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import { ProtectedRoute } from "@/features/auth/ProtectedRoute";
