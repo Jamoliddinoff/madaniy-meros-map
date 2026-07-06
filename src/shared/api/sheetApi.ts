@@ -1,13 +1,12 @@
-import { ENV } from "@/shared/config/env";
-
 /** Google Sheet'da saqlanadigan kadastr yozuvi */
 export interface CadastralRecord {
   landCadastralNumber: string;
   cadastralNumber: string;
 }
 
-// Dev'da CORS'dan qochish uchun Vite proxy (/sheet-api) orqali; prod'da to'g'ridan-to'g'ri.
-const API_URL = import.meta.env.DEV ? "/sheet-api" : ENV.sheetApiUrl;
+// CORS'dan qochish uchun same-origin proxy: dev'da Vite proxy (/sheet-api),
+// prod'da Vercel serverless function (/api/sheet).
+const API_URL = import.meta.env.DEV ? "/sheet-api" : "/api/sheet";
 
 /** Barcha saqlangan (madaniy meros) yozuvlarni oladi. */
 export async function getCadastralList(): Promise<CadastralRecord[]> {
