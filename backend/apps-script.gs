@@ -12,7 +12,7 @@
 // ⬇️ SHU YERGA spreadsheet ID sini qo'ying (URL dan oling):
 // https://docs.google.com/spreadsheets/d/<<<SPREADSHEET_ID>>>/edit
 // "/d/" va "/edit" orasidagi uzun matn — o'sha ID.
-const SPREADSHEET_ID = "BU_YERGA_SPREADSHEET_ID";
+const SPREADSHEET_ID = "1S6C9I-FqoC8Afzk1Fp8cnNZTzF7Xhl4Ya9fMQQULxZI";
 
 const SHEET_NAME = "Sheet1";
 const HEADERS = ["landCadastralNumber", "cadastralNumber"];
