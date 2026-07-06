@@ -2,8 +2,10 @@ import { createContext, useContext } from "react";
 
 export interface AuthContextValue {
   isAuthenticated: boolean;
+  /** localStorage'dagi hash tekshirilayotgan boshlang'ich holat. */
+  checking: boolean;
   /** Login/parolni tekshiradi; muvaffaqiyatli bo'lsa true qaytaradi. */
-  login: (login: string, password: string) => boolean;
+  login: (login: string, password: string) => Promise<boolean>;
   logout: () => void;
 }
 

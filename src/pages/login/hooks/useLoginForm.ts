@@ -19,7 +19,7 @@ export function useLoginForm() {
   const [errors, setErrors] = useState<FieldErrors>({});
   const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setErrors({});
 
@@ -35,7 +35,7 @@ export function useLoginForm() {
     }
 
     setSubmitting(true);
-    const ok = authenticate(parsed.data.login, parsed.data.password);
+    const ok = await authenticate(parsed.data.login, parsed.data.password);
     setSubmitting(false);
 
     if (!ok) {

@@ -1,0 +1,11 @@
+/**
+ * Matnni SHA-256 bilan hashlaydi (hex string qaytaradi).
+ * Web Crypto API (crypto.subtle) — brauzerda native, tashqi kutubxonasiz.
+ */
+export async function sha256(text: string): Promise<string> {
+  const data = new TextEncoder().encode(text);
+  const buffer = await crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(buffer))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
