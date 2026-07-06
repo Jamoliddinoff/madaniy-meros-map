@@ -19,3 +19,22 @@ export function parseWktPolygon(wkt: string): [number, number][][] {
       }),
   );
 }
+
+/**
+ * Poligonning tashqi ringi bo'yicha bounding-box markazini [lng, lat] qaytaradi.
+ * Xaritada fokuslash uchun ishlatiladi.
+ */
+export function polygonCenter(rings: [number, number][][]): [number, number] {
+  const ring = rings[0] ?? [];
+  let minLng = Infinity;
+  let minLat = Infinity;
+  let maxLng = -Infinity;
+  let maxLat = -Infinity;
+  for (const [lng, lat] of ring) {
+    if (lng < minLng) minLng = lng;
+    if (lng > maxLng) maxLng = lng;
+    if (lat < minLat) minLat = lat;
+    if (lat > maxLat) maxLat = lat;
+  }
+  return [(minLng + maxLng) / 2, (minLat + maxLat) / 2];
+}

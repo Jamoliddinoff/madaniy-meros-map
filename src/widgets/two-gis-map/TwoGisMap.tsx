@@ -2,7 +2,9 @@ import { useTwoGisMap } from "./hooks/useTwoGisMap";
 import { useUzbekistanMask } from "./hooks/useUzbekistanMask";
 import { useCadastralLayers } from "./hooks/useCadastralLayers";
 import { useCadastralData } from "./hooks/useCadastralData";
+import { useCadastralSearch } from "./hooks/useCadastralSearch";
 import { CadastralModal } from "./components/CadastralModal";
+import { CadastralSearch } from "./components/CadastralSearch";
 import { saveCadastral, type CadastralRecord } from "@/shared/api/sheetApi";
 
 /**
@@ -20,6 +22,7 @@ export default function TwoGisMap() {
     ready,
     cadastralSet,
   );
+  const { search } = useCadastralSearch(mapRef);
 
   const handleSave = async (record: CadastralRecord) => {
     await saveCadastral(record);
@@ -30,6 +33,7 @@ export default function TwoGisMap() {
   return (
     <>
       <div ref={containerRef} className="h-full w-full" />
+      <CadastralSearch onSearch={search} />
       <CadastralModal
         key={
           selected
