@@ -6,4 +6,5 @@ export const ENV = {
   authLogin: import.meta.env.VITE_AUTH_LOGIN,
   authPassword: import.meta.env.VITE_AUTH_PASSWORD,
   twoGisApiKey: import.meta.env.VITE_2GIS_API_KEY,
+  sheetApiUrl: import.meta.env.VITE_SHEET_API_URL,
 } as const;

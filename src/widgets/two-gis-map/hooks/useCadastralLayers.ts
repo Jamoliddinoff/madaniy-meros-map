@@ -6,13 +6,26 @@ import type { MapRef, PolygonsResponse, SelectedBuilding } from "../types";
 
 const { data } = polygonsData as PolygonsResponse;
 
+// Saqlangan (madaniy meros) bino rangi
+const SAVED_COLOR = "rgba(255,140,0,0.5)";
+const SAVED_STROKE = "#FF8C00";
+// Standart bino rangi
+const DEFAULT_COLOR = "rgba(0,176,240,0.35)";
+const DEFAULT_STROKE = "#00b0f0";
+
 /**
  * poligons.json asosida qatlamlarni chizadi:
  *  - yer (land) geometriyasi → faqat chegara (ichi bo'yalmagan)
  *  - bino (building) geometriyasi → to'ldirilgan poligon
+ * Saqlangan (`cadastralSet` ichidagi) binolar oranj rangda chiziladi.
+ * `cadastralSet` o'zgarganda qatlamlar qayta chiziladi (redraw).
  * Bino poligoniga bosilganda tanlangan bino ma'lumotini qaytaradi.
  */
-export function useCadastralLayers(mapRef: MapRef, enabled: boolean) {
+export function useCadastralLayers(
+  mapRef: MapRef,
+  enabled: boolean,
+  cadastralSet: Set<string>,
+) {
   const [selected, setSelected] = useState<SelectedBuilding | null>(null);
 
   useEffect(() => {
@@ -43,12 +56,13 @@ export function useCadastralLayers(mapRef: MapRef, enabled: boolean) {
       // Binolar — to'ldirilgan poligon, bosiladigan
       for (const building of land.buildings) {
         if (!building.geometry) continue;
+        const isSaved = cadastralSet.has(building.cadastralNumber);
         try {
           const polygon = new window.mapgl.Polygon(map, {
             coordinates: parseWktPolygon(building.geometry),
-            color: "rgba(0,176,240,0.35)",
-            strokeColor: "#00b0f0",
-            strokeWidth: 1,
+            color: isSaved ? SAVED_COLOR : DEFAULT_COLOR,
+            strokeColor: isSaved ? SAVED_STROKE : DEFAULT_STROKE,
+            strokeWidth: isSaved ? 2 : 1,
             zIndex: 20,
           });
           polygon.on("click", () =>
@@ -67,7 +81,7 @@ export function useCadastralLayers(mapRef: MapRef, enabled: boolean) {
     return () => {
       objects.forEach(destroyMapGLObject);
     };
-  }, [mapRef, enabled]);
+  }, [mapRef, enabled, cadastralSet]);
 
   return { selected, clearSelected: () => setSelected(null) };
 }
