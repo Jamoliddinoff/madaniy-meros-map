@@ -9,7 +9,7 @@ interface CadastralModalProps {
   /** Validatsiyadan o'tgach chaqiriladi; POST + refetch tashqarida bajariladi. */
   onSave: (record: {
     landCadastralNumber: string;
-    cadastralNumber: string;
+    cadastralNumbers: string[];
   }) => Promise<void>;
 }
 
@@ -19,7 +19,7 @@ const inputClass =
 /**
  * Poligon bosilganda ochiladigan modal:
  * kadastr raqamlari + "madaniy meros sifatida saqlaysizmi?" savoli.
- * Building click → bitta bino (input). Land click → binolardan select.
+ * Building click → bitta bino (input). Land click → binolardan bir nechtasini tanlash (checkbox).
  */
 export function CadastralModal({
   selection,
@@ -27,26 +27,36 @@ export function CadastralModal({
   onSave,
 }: CadastralModalProps) {
   const options = selection?.cadastralNumbers ?? [];
-  const isSelect = options.length > 1;
+  const isMultiSelect = options.length > 1;
 
   // State parent `key` orqali har yangi tanlovda qayta init bo'ladi (effektsiz).
   const [landCadastralNumber, setLandCadastralNumber] = useState(
     selection?.landCadastralNumber ?? "",
   );
   const [cadastralNumber, setCadastralNumber] = useState(options[0] ?? "");
+  const [selectedCadastralNumbers, setSelectedCadastralNumbers] =
+    useState<string[]>(options);
   const [saving, setSaving] = useState(false);
   const { showToast } = useToast();
 
+  const toggleCadastralNumber = (cad: string) => {
+    setSelectedCadastralNumbers((prev) =>
+      prev.includes(cad) ? prev.filter((item) => item !== cad) : [...prev, cad],
+    );
+  };
+
   const handleYes = async () => {
     const land = landCadastralNumber.trim();
-    const cad = cadastralNumber.trim();
-    if (!land || !cad) {
+    const cadastralNumbers = isMultiSelect
+      ? selectedCadastralNumbers
+      : [cadastralNumber.trim()].filter(Boolean);
+    if (!land || cadastralNumbers.length === 0) {
       showToast("Yer va bino kadastr raqamlari to'ldirilishi shart", "error");
       return;
     }
     setSaving(true);
     try {
-      await onSave({ landCadastralNumber: land, cadastralNumber: cad });
+      await onSave({ landCadastralNumber: land, cadastralNumbers });
       showToast("Muvaffaqiyatli saqlandi", "success");
     } catch {
       showToast("Saqlashda xatolik yuz berdi", "error");
@@ -72,23 +82,31 @@ export function CadastralModal({
           />
         </label>
 
-        <label className="block">
+        <div className="block">
           <span className="mb-1 block text-sm font-medium text-neutral-900">
             Bino kadastr raqami
           </span>
-          {isSelect ? (
-            <select
-              value={cadastralNumber}
-              onChange={(e) => setCadastralNumber(e.target.value)}
+          {isMultiSelect ? (
+            <div
+              role="group"
               aria-label="Bino kadastr raqami"
-              className={inputClass}
+              className="flex max-h-48 flex-col gap-1 overflow-y-auto rounded-lg border border-line bg-neutral-0 p-2"
             >
               {options.map((cad) => (
-                <option key={cad} value={cad}>
+                <label
+                  key={cad}
+                  className="flex items-center gap-2 rounded px-2 py-1.5 font-mono text-sm text-neutral-900 hover:bg-neutral-100"
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedCadastralNumbers.includes(cad)}
+                    onChange={() => toggleCadastralNumber(cad)}
+                    className="accent-primary-600"
+                  />
                   {cad}
-                </option>
+                </label>
               ))}
-            </select>
+            </div>
           ) : (
             <input
               type="text"
@@ -98,7 +116,7 @@ export function CadastralModal({
               className={inputClass}
             />
           )}
-        </label>
+        </div>
 
         <p className="text-sm text-neutral-500">
           Ushbu binoni madaniy meros obyekti sifatida saqlaysizmi?

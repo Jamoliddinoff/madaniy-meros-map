@@ -5,7 +5,7 @@ import { useCadastralData } from "./hooks/useCadastralData";
 import { useCadastralSearch } from "./hooks/useCadastralSearch";
 import { CadastralModal } from "./components/CadastralModal";
 import { CadastralSearch } from "./components/CadastralSearch";
-import { saveCadastral, type CadastralRecord } from "@/shared/api/sheetApi";
+import { saveCadastral } from "@/shared/api/sheetApi";
 
 /**
  * To'liq ekranli 2GIS xaritasi + O'zbekiston chegara niqobi (mask)
@@ -24,8 +24,18 @@ export default function TwoGisMap() {
   );
   const { search } = useCadastralSearch(mapRef);
 
-  const handleSave = async (record: CadastralRecord) => {
-    await saveCadastral(record);
+  const handleSave = async (record: {
+    landCadastralNumber: string;
+    cadastralNumbers: string[];
+  }) => {
+    await Promise.all(
+      record.cadastralNumbers.map((cadastralNumber) =>
+        saveCadastral({
+          landCadastralNumber: record.landCadastralNumber,
+          cadastralNumber,
+        }),
+      ),
+    );
     await refetch();
     clearSelected();
   };
