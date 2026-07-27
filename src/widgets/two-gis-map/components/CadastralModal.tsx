@@ -90,32 +90,32 @@ export function CadastralModal({
           />
         </label>
 
-        <div className="block">
+        {!isMultiSelect &&<div className="block">
           <span className="mb-1 block text-sm font-medium text-neutral-900">
             Bino kadastr raqami
           </span>
-          {isMultiSelect ? (
-            <div
-              role="group"
-              aria-label="Bino kadastr raqami"
-              className="flex max-h-48 flex-col gap-1 overflow-y-auto rounded-lg border border-line bg-neutral-0 p-2"
-            >
-              {options.map((cad) => (
-                <label
-                  key={cad}
-                  className="flex items-center gap-2 rounded px-2 py-1.5 font-mono text-sm text-neutral-900 hover:bg-neutral-100"
-                >
-                  <input
-                    type="checkbox"
-                    checked={selectedCadastralNumbers.includes(cad)}
-                    onChange={() => toggleCadastralNumber(cad)}
-                    className="accent-primary-600"
-                  />
-                  {cad}
-                </label>
-              ))}
-            </div>
-          ) : (
+          {/*<div*/}
+          {/*  role="group"*/}
+          {/*  aria-label="Bino kadastr raqami"*/}
+          {/*  className="flex max-h-48 flex-col gap-1 overflow-y-auto rounded-lg border border-line bg-neutral-0 p-2"*/}
+          {/*>*/}
+          {/*  {options.map((cad) => (*/}
+          {/*    <label*/}
+          {/*      key={cad}*/}
+          {/*      className="flex items-center gap-2 rounded px-2 py-1.5 font-mono text-sm text-neutral-900 hover:bg-neutral-100"*/}
+          {/*    >*/}
+          {/*      <input*/}
+          {/*        type="checkbox"*/}
+          {/*        checked={selectedCadastralNumbers.includes(cad)}*/}
+          {/*        onChange={() => toggleCadastralNumber(cad)}*/}
+          {/*        className="accent-primary-600"*/}
+          {/*      />*/}
+          {/*      {cad}*/}
+          {/*    </label>*/}
+          {/*  ))}*/}
+          {/*</div>
+           */}
+
             <input
               type="text"
               value={cadastralNumber}
@@ -123,19 +123,21 @@ export function CadastralModal({
               aria-label="Bino kadastr raqami"
               className={inputClass}
             />
-          )}
-        </div>
+
+        </div>}
 
         {isMultiSelect && (
           <button
             type="button"
             onClick={handleAddPolygon}
-            className="rounded-lg border border-line py-2.5 font-medium text-neutral-900 transition-colors hover:bg-neutral-100"
+            className="flex-1 rounded-lg bg-primary-600 py-2.5 font-medium text-neutral-0 transition-colors hover:bg-primary-700 disabled:opacity-60"
           >
+
             Poligon qo'shish
           </button>
         )}
 
+        {!isMultiSelect&&<>
         <p className="text-sm text-neutral-500">
           Ushbu binoni madaniy meros obyekti sifatida saqlaysizmi?
         </p>
@@ -157,7 +159,7 @@ export function CadastralModal({
           >
             Yo'q
           </button>
-        </div>
+        </div></>}
       </div>
     </Modal>
   );
