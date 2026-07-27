@@ -39,10 +39,33 @@ function getSheet_() {
   if (!sheet) {
     sheet = ss.insertSheet(SHEET_NAME);
   }
+
+  // Varaq grid'i HEADERS uzunligidan tor bo'lsa (masalan, eski 2 ustunli
+  // varaq) — appendRow() qo'shimcha ustunlarni jimgina tashlab yuboradi.
+  // Shu sababli har doim setRow_() (getRange().setValues()) ishlatamiz,
+  // u grid'ni avtomatik kengaytiradi.
+  if (sheet.getMaxColumns() < HEADERS.length) {
+    sheet.insertColumnsAfter(
+      sheet.getMaxColumns(),
+      HEADERS.length - sheet.getMaxColumns(),
+    );
+  }
+
   if (sheet.getLastRow() === 0) {
-    sheet.appendRow(HEADERS);
+    setRow_(sheet, 1, HEADERS);
+  } else {
+    // Eski (poligon ustuni qo'shilishidan oldingi) sarlavha qatorini to'ldirib qo'yamiz.
+    const headerRow = sheet.getRange(1, 1, 1, HEADERS.length).getValues()[0];
+    if (!headerRow[2]) {
+      sheet.getRange(1, 3).setValue(HEADERS[2]);
+    }
   }
   return sheet;
+}
+
+/** Berilgan qatorga qiymatlarni yozadi; kerak bo'lsa grid'ni avtomatik kengaytiradi. */
+function setRow_(sheet, row, values) {
+  sheet.getRange(row, 1, 1, values.length).setValues([values]);
 }
 
 /** GET → barcha saqlangan yozuvlar ro'yxati (JSON massiv). */
@@ -81,7 +104,7 @@ function doPost(e) {
     }
 
     const sheet = getSheet_();
-    sheet.appendRow([land, cad, poligon]);
+    setRow_(sheet, sheet.getLastRow() + 1, [land, cad, poligon]);
 
     return jsonOutput_({
       success: true,

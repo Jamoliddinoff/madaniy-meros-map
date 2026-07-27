@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { destroyMapGLObject } from "@/shared/lib/mapgl";
 import { parseWktPolygon } from "@/shared/utils/parseWkt";
 import polygonsData from "@/shared/constants/poligons.json";
+import type { CadastralRecord } from "@/shared/api/sheetApi";
 import type { MapRef, PolygonsResponse, CadastralSelection } from "../types";
 
 const { data } = polygonsData as PolygonsResponse;
@@ -25,6 +26,7 @@ export function useCadastralLayers(
   mapRef: MapRef,
   enabled: boolean,
   cadastralSet: Set<string>,
+  savedRecords: CadastralRecord[],
   suppressSelectRef?: { current: boolean },
 ) {
   const [selected, setSelected] = useState<CadastralSelection | null>(null);
@@ -87,10 +89,28 @@ export function useCadastralLayers(
       }
     }
 
+    // Qo'lda chizib saqlangan poligonlar (cadastralNumber: "DRAWED") — sheet'dan olingan.
+    for (const record of savedRecords) {
+      if (!record.poligon) continue;
+      try {
+        const coordinates = JSON.parse(record.poligon) as number[][][];
+        const drawnPolygon = new window.mapgl.Polygon(map, {
+          coordinates,
+          color: SAVED_COLOR,
+          strokeColor: SAVED_STROKE,
+          strokeWidth: 2,
+          zIndex: 20,
+        });
+        objects.push(drawnPolygon);
+      } catch (e) {
+        console.warn("Drawn polygon parse error:", e);
+      }
+    }
+
     return () => {
       objects.forEach(destroyMapGLObject);
     };
-  }, [mapRef, enabled, cadastralSet, suppress]);
+  }, [mapRef, enabled, cadastralSet, savedRecords, suppress]);
 
   return { selected, clearSelected: () => setSelected(null) };
 }

@@ -19,12 +19,13 @@ export default function TwoGisMap() {
   const { containerRef, mapRef, ready } = useTwoGisMap();
   useUzbekistanMask(mapRef, ready);
 
-  const { cadastralSet, refetch } = useCadastralData();
+  const { data, cadastralSet, refetch } = useCadastralData();
   const draw = useDrawPolygon(mapRef, ready, refetch);
   const { selected, clearSelected } = useCadastralLayers(
     mapRef,
     ready,
     cadastralSet,
+    data,
     draw.isActiveRef,
   );
   const { search } = useCadastralSearch(mapRef);
