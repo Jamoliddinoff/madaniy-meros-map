@@ -10,6 +10,8 @@ const { data } = polygonsData as PolygonsResponse;
 // Saqlangan (madaniy meros) bino rangi
 const SAVED_COLOR = "rgba(255,140,0,0.5)";
 const SAVED_STROKE = "#FF8C00";
+const DROWED_COLOR = "#d15cff";
+const DROWED_STROKE = "#790095";
 // Standart bino rangi
 const DEFAULT_COLOR = "rgba(0,176,240,0.35)";
 const DEFAULT_STROKE = "#00b0f0";
@@ -96,8 +98,8 @@ export function useCadastralLayers(
         const coordinates = JSON.parse(record.poligon) as number[][][];
         const drawnPolygon = new window.mapgl.Polygon(map, {
           coordinates,
-          color: SAVED_COLOR,
-          strokeColor: SAVED_STROKE,
+          color: DROWED_COLOR,
+          strokeColor: DROWED_STROKE,
           strokeWidth: 2,
           zIndex: 20,
         });

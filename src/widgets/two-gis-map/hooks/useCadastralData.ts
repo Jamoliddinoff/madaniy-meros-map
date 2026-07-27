@@ -17,6 +17,7 @@ export function useCadastralData() {
     setError(null);
     try {
       const list = await getCadastralList();
+      console.log("list------------------",list)
       setData(list);
       setCadastralSet(new Set(list.map((item) => item.cadastralNumber)));
     } catch (e) {
