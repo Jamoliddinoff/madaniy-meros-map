@@ -34,8 +34,9 @@ export function CadastralModal({
     selection?.landCadastralNumber ?? "",
   );
   const [cadastralNumber, setCadastralNumber] = useState(options[0] ?? "");
-  const [selectedCadastralNumbers, setSelectedCadastralNumbers] =
-    useState<string[]>(options);
+  const [selectedCadastralNumbers, setSelectedCadastralNumbers] = useState<
+    string[]
+  >([]);
   const [saving, setSaving] = useState(false);
   const { showToast } = useToast();
 
