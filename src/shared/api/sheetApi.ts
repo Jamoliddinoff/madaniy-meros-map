@@ -1,7 +1,12 @@
-/** Google Sheet'da saqlanadigan kadastr yozuvi */
+/**
+ * Google Sheet'da saqlanadigan kadastr yozuvi.
+ * `poligon` — qo'lda chizilgan poligon uchun (cadastralNumber: "DRAWED"),
+ * ring koordinatalari JSON.stringify qilingan holda saqlanadi.
+ */
 export interface CadastralRecord {
   landCadastralNumber: string;
   cadastralNumber: string;
+  poligon?: string;
 }
 
 // CORS'dan qochish uchun same-origin proxy: dev'da Vite proxy (/sheet-api),

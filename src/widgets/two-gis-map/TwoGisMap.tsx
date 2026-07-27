@@ -3,24 +3,29 @@ import { useUzbekistanMask } from "./hooks/useUzbekistanMask";
 import { useCadastralLayers } from "./hooks/useCadastralLayers";
 import { useCadastralData } from "./hooks/useCadastralData";
 import { useCadastralSearch } from "./hooks/useCadastralSearch";
+import { useDrawPolygon } from "./hooks/useDrawPolygon";
 import { CadastralModal } from "./components/CadastralModal";
 import { CadastralSearch } from "./components/CadastralSearch";
+import { DrawPolygonOverlay } from "./components/DrawPolygonOverlay";
+import { DrawConfirmModal } from "./components/DrawConfirmModal";
 import { saveCadastral } from "@/shared/api/sheetApi";
 
 /**
  * To'liq ekranli 2GIS xaritasi + O'zbekiston chegara niqobi (mask)
  * + kadastr qatlamlari (yer chegarasi, bino poligonlari, saqlanganlar oranj)
- * + saqlash modal oynasi.
+ * + saqlash modal oynasi + landga qo'lda poligon chizib biriktirish.
  */
 export default function TwoGisMap() {
   const { containerRef, mapRef, ready } = useTwoGisMap();
   useUzbekistanMask(mapRef, ready);
 
   const { cadastralSet, refetch } = useCadastralData();
+  const draw = useDrawPolygon(mapRef, ready, refetch);
   const { selected, clearSelected } = useCadastralLayers(
     mapRef,
     ready,
     cadastralSet,
+    draw.isActiveRef,
   );
   const { search } = useCadastralSearch(mapRef);
 
@@ -40,6 +45,11 @@ export default function TwoGisMap() {
     clearSelected();
   };
 
+  const handleAddPolygon = (landCadastralNumber: string) => {
+    draw.start(landCadastralNumber);
+    clearSelected();
+  };
+
   return (
     <>
       <div ref={containerRef} className="h-full w-full" />
@@ -53,6 +63,20 @@ export default function TwoGisMap() {
         selection={selected}
         onClose={clearSelected}
         onSave={handleSave}
+        onAddPolygon={handleAddPolygon}
+      />
+      <DrawPolygonOverlay
+        phase={draw.phase}
+        pointCount={draw.pointCount}
+        onSave={draw.finish}
+        onCancel={draw.cancel}
+      />
+      <DrawConfirmModal
+        open={draw.phase === "confirming"}
+        landCadastralNumber={draw.landCadastralNumber}
+        saving={draw.saving}
+        onConfirm={draw.confirmSave}
+        onDecline={draw.declineConfirm}
       />
     </>
   );

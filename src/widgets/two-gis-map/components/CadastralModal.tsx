@@ -11,6 +11,8 @@ interface CadastralModalProps {
     landCadastralNumber: string;
     cadastralNumbers: string[];
   }) => Promise<void>;
+  /** Land uchun qo'lda yangi poligon chizishni boshlaydi (faqat bir nechta bino bo'lganda). */
+  onAddPolygon: (landCadastralNumber: string) => void;
 }
 
 const inputClass =
@@ -25,6 +27,7 @@ export function CadastralModal({
   selection,
   onClose,
   onSave,
+  onAddPolygon,
 }: CadastralModalProps) {
   const options = selection?.cadastralNumbers ?? [];
   const isMultiSelect = options.length > 1;
@@ -44,6 +47,10 @@ export function CadastralModal({
     setSelectedCadastralNumbers((prev) =>
       prev.includes(cad) ? prev.filter((item) => item !== cad) : [...prev, cad],
     );
+  };
+
+  const handleAddPolygon = () => {
+    onAddPolygon(selection?.landCadastralNumber ?? landCadastralNumber);
   };
 
   const handleYes = async () => {
@@ -118,6 +125,16 @@ export function CadastralModal({
             />
           )}
         </div>
+
+        {isMultiSelect && (
+          <button
+            type="button"
+            onClick={handleAddPolygon}
+            className="rounded-lg border border-line py-2.5 font-medium text-neutral-900 transition-colors hover:bg-neutral-100"
+          >
+            Poligon qo'shish
+          </button>
+        )}
 
         <p className="text-sm text-neutral-500">
           Ushbu binoni madaniy meros obyekti sifatida saqlaysizmi?

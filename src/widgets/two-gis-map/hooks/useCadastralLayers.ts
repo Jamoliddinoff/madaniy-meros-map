@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { destroyMapGLObject } from "@/shared/lib/mapgl";
 import { parseWktPolygon } from "@/shared/utils/parseWkt";
 import polygonsData from "@/shared/constants/poligons.json";
@@ -25,8 +25,11 @@ export function useCadastralLayers(
   mapRef: MapRef,
   enabled: boolean,
   cadastralSet: Set<string>,
+  suppressSelectRef?: { current: boolean },
 ) {
   const [selected, setSelected] = useState<CadastralSelection | null>(null);
+  const internalSuppressRef = useRef(false);
+  const suppress = suppressSelectRef ?? internalSuppressRef;
 
   useEffect(() => {
     if (!enabled || !mapRef.current || !window.mapgl) return;
@@ -45,12 +48,13 @@ export function useCadastralLayers(
             strokeWidth: 2,
             zIndex: 10,
           });
-          landPolygon.on("click", () =>
+          landPolygon.on("click", () => {
+            if (suppress.current) return;
             setSelected({
               landCadastralNumber: land.landCadastralNumber,
               cadastralNumbers: land.buildings.map((b) => b.cadastralNumber),
-            }),
-          );
+            });
+          });
           objects.push(landPolygon);
         } catch (e) {
           console.warn("Land polygon error:", e);
@@ -69,12 +73,13 @@ export function useCadastralLayers(
             strokeWidth: isSaved ? 2 : 1,
             zIndex: 20,
           });
-          polygon.on("click", () =>
+          polygon.on("click", () => {
+            if (suppress.current) return;
             setSelected({
               landCadastralNumber: land.landCadastralNumber,
               cadastralNumbers: [building.cadastralNumber],
-            }),
-          );
+            });
+          });
           objects.push(polygon);
         } catch (e) {
           console.warn("Building polygon error:", e);
@@ -85,7 +90,7 @@ export function useCadastralLayers(
     return () => {
       objects.forEach(destroyMapGLObject);
     };
-  }, [mapRef, enabled, cadastralSet]);
+  }, [mapRef, enabled, cadastralSet, suppress]);
 
   return { selected, clearSelected: () => setSelected(null) };
 }

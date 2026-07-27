@@ -6,7 +6,7 @@
  *   - Who has access: Anyone
  * Har o'zgarishdan keyin qayta deploy qiling (yoki "Manage deployments" da versiyani yangilang).
  *
- * Ustunlar (A, B): landCadastralNumber | cadastralNumber
+ * Ustunlar (A, B, C): landCadastralNumber | cadastralNumber | poligon
  */
 
 // ⬇️ SHU YERGA spreadsheet ID sini qo'ying (URL dan oling):
@@ -15,7 +15,7 @@
 const SPREADSHEET_ID = "1S6C9I-FqoC8Afzk1Fp8cnNZTzF7Xhl4Ya9fMQQULxZI";
 
 const SHEET_NAME = "Sheet1";
-const HEADERS = ["landCadastralNumber", "cadastralNumber"];
+const HEADERS = ["landCadastralNumber", "cadastralNumber", "poligon"];
 
 /**
  * Varaqni ishonchli oladi (null bo'lishi mumkin emas):
@@ -52,11 +52,12 @@ function doGet() {
   const records = [];
 
   if (lastRow > 1) {
-    const values = sheet.getRange(2, 1, lastRow - 1, 2).getValues();
+    const values = sheet.getRange(2, 1, lastRow - 1, 3).getValues();
     values.forEach(function (row) {
       records.push({
         landCadastralNumber: String(row[0]),
         cadastralNumber: String(row[1]),
+        poligon: row[2] ? String(row[2]) : "",
       });
     });
   }
@@ -64,12 +65,13 @@ function doGet() {
   return jsonOutput_(records);
 }
 
-/** POST → yangi yozuv qo'shadi. Body: {landCadastralNumber, cadastralNumber} (text/plain). */
+/** POST → yangi yozuv qo'shadi. Body: {landCadastralNumber, cadastralNumber, poligon?} (text/plain). */
 function doPost(e) {
   try {
     const body = JSON.parse(e.postData.contents);
     const land = (body.landCadastralNumber || "").toString().trim();
     const cad = (body.cadastralNumber || "").toString().trim();
+    const poligon = (body.poligon || "").toString();
 
     if (!land || !cad) {
       return jsonOutput_({
@@ -79,9 +81,14 @@ function doPost(e) {
     }
 
     const sheet = getSheet_();
-    sheet.appendRow([land, cad]);
+    sheet.appendRow([land, cad, poligon]);
 
-    return jsonOutput_({ success: true, landCadastralNumber: land, cadastralNumber: cad });
+    return jsonOutput_({
+      success: true,
+      landCadastralNumber: land,
+      cadastralNumber: cad,
+      poligon: poligon,
+    });
   } catch (err) {
     return jsonOutput_({ success: false, error: String(err) });
   }
