@@ -30,8 +30,8 @@ export function CadastralModal({
   onAddPolygon,
 }: CadastralModalProps) {
   const options = selection?.cadastralNumbers ?? [];
-  const isMultiSelect = options.length > 1;
-
+  const isLand = selection?.isLand ?? false;
+  // const isMultiSelect = options.length > 1;
   // State parent `key` orqali har yangi tanlovda qayta init bo'ladi (effektsiz).
   const [landCadastralNumber, setLandCadastralNumber] = useState(
     selection?.landCadastralNumber ?? "",
@@ -55,7 +55,7 @@ export function CadastralModal({
 
   const handleYes = async () => {
     const land = landCadastralNumber.trim();
-    const cadastralNumbers = isMultiSelect
+    const cadastralNumbers = isLand
       ? selectedCadastralNumbers
       : [cadastralNumber.trim()].filter(Boolean);
     if (!land || cadastralNumbers.length === 0) {
@@ -90,7 +90,7 @@ export function CadastralModal({
           />
         </label>
 
-        {!isMultiSelect &&<div className="block">
+        {!isLand &&<div className="block">
           <span className="mb-1 block text-sm font-medium text-neutral-900">
             Bino kadastr raqami
           </span>
@@ -126,7 +126,7 @@ export function CadastralModal({
 
         </div>}
 
-        {isMultiSelect && (
+        {isLand && (
           <button
             type="button"
             onClick={handleAddPolygon}
@@ -137,7 +137,7 @@ export function CadastralModal({
           </button>
         )}
 
-        {!isMultiSelect&&<>
+        {!isLand&&<>
         <p className="text-sm text-neutral-500">
           Ushbu binoni madaniy meros obyekti sifatida saqlaysizmi?
         </p>

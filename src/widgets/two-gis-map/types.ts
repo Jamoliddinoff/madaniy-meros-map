@@ -24,10 +24,11 @@ export interface PolygonsResponse {
 
 /**
  * Poligon bosilganda modalga uzatiladigan tanlov.
- * Building click → `cadastralNumbers` bitta elementli.
- * Land click → o'sha yerdagi barcha bino cadastralNumberlari (select uchun).
+ * Building click → `isLand: false`, `cadastralNumbers` bitta elementli.
+ * Land click → `isLand: true`, o'sha yerdagi barcha bino cadastralNumberlari (select uchun).
  */
 export interface CadastralSelection {
   landCadastralNumber: string;
   cadastralNumbers: string[];
+  isLand: boolean;
 }

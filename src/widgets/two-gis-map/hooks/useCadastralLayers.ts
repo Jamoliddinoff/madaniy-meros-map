@@ -57,6 +57,7 @@ export function useCadastralLayers(
             setSelected({
               landCadastralNumber: land.landCadastralNumber,
               cadastralNumbers: land.buildings.map((b) => b.cadastralNumber),
+              isLand: true,
             });
           });
           objects.push(landPolygon);
@@ -82,6 +83,7 @@ export function useCadastralLayers(
             setSelected({
               landCadastralNumber: land.landCadastralNumber,
               cadastralNumbers: [building.cadastralNumber],
+              isLand: false,
             });
           });
           objects.push(polygon);
