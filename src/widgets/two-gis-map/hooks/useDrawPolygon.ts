@@ -2,13 +2,16 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { destroyMapGLObject } from "@/shared/lib/mapgl";
 import { saveCadastral } from "@/shared/api/sheetApi";
 import { useToast } from "@/shared/ui/toast/toast-context";
+import { circleToPolygon, distanceMeters } from "../lib/geo";
 import type { MapRef } from "../types";
 
 export type DrawPhase = "idle" | "drawing" | "confirming";
+export type DrawMode = "polygon" | "circle";
 
 const DRAFT_COLOR = "rgba(155,81,224,0.35)";
 const DRAFT_STROKE = "#9b51e0";
 export const MIN_POINTS = 3;
+const CIRCLE_SEGMENTS = 64;
 
 /**
  * Landga qo'lda yangi poligon (bino) biriktirish jarayoni:
@@ -25,6 +28,7 @@ export function useDrawPolygon(
   onSaved: () => Promise<void>,
 ) {
   const [phase, setPhase] = useState<DrawPhase>("idle");
+  const [mode, setModeState] = useState<DrawMode>("polygon");
   const [landCadastralNumber, setLandCadastralNumber] = useState<
     string | null
   >(null);
@@ -34,6 +38,7 @@ export function useDrawPolygon(
 
   const pointsRef = useRef<[number, number][]>([]);
   const ringRef = useRef<[number, number][] | null>(null);
+  const circleCenterRef = useRef<[number, number] | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const previewLineRef = useRef<any>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -95,7 +100,9 @@ export function useDrawPolygon(
   const start = useCallback((land: string) => {
     pointsRef.current = [];
     ringRef.current = null;
+    circleCenterRef.current = null;
     setPointCount(0);
+    setModeState("polygon");
     setLandCadastralNumber(land);
     setPhase("drawing");
   }, []);
@@ -106,10 +113,27 @@ export function useDrawPolygon(
     clearFinal();
     pointsRef.current = [];
     ringRef.current = null;
+    circleCenterRef.current = null;
     setPointCount(0);
     setLandCadastralNumber(null);
     setPhase("idle");
   }, [clearLine, clearFill, clearFinal]);
+
+  /** Chizish rejimini almashtiradi (poligon/doira) — joriy jarayondagi nuqtalarni tozalaydi. */
+  const setMode = useCallback(
+    (next: DrawMode) => {
+      setModeState((prev) => {
+        if (prev === next) return prev;
+        clearLine();
+        clearFill();
+        pointsRef.current = [];
+        circleCenterRef.current = null;
+        setPointCount(0);
+        return next;
+      });
+    },
+    [clearLine, clearFill],
+  );
 
   /** Chizishni yakunlaydi va tasdiqlash oynasini ochadi (Saqlash tugmasi/Enter/double-click). */
   const finish = useCallback(() => {
@@ -137,12 +161,19 @@ export function useDrawPolygon(
     setPhase("confirming");
   }, [mapRef, clearLine, clearFill, showToast]);
 
-  /** Tasdiqlashda "Yo'q": chizishga qaytadi, nuqtalar saqlanib qoladi. */
+  /** Tasdiqlashda "Yo'q": chizishga qaytadi. Poligonda nuqtalar saqlanadi,
+   * doirada markazni qaytadan belgilash kerak bo'ladi. */
   const declineConfirm = useCallback(() => {
     clearFinal();
     setPhase("drawing");
-    redrawFill();
-  }, [clearFinal, redrawFill]);
+    if (mode === "circle") {
+      pointsRef.current = [];
+      circleCenterRef.current = null;
+      setPointCount(0);
+    } else {
+      redrawFill();
+    }
+  }, [clearFinal, redrawFill, mode]);
 
   // Chizish rejimi: xarita konteynerida native DOM eventlar (mavjud poligonlar
   // ustida ham ishlashi uchun) — click (nuqta), mousemove (rAF throttling),
@@ -165,7 +196,7 @@ export function useDrawPolygon(
       return [lng, lat];
     };
 
-    const handleClick = (e: MouseEvent) => {
+    const handlePolygonClick = (e: MouseEvent) => {
       const point = toLngLat(e);
       pointsRef.current = [...pointsRef.current, point];
       setPointCount(pointsRef.current.length);
@@ -178,7 +209,44 @@ export function useDrawPolygon(
       redrawFill();
     };
 
+    // Doira: 1-click markazni belgilaydi, 2-click radiusni yakunlab chizishni tugatadi.
+    const handleCircleClick = (e: MouseEvent) => {
+      const point = toLngLat(e);
+      if (!circleCenterRef.current) {
+        circleCenterRef.current = point;
+        setPointCount(1);
+        return;
+      }
+      const radius = distanceMeters(circleCenterRef.current, point);
+      if (radius <= 0) return;
+      pointsRef.current = circleToPolygon(
+        circleCenterRef.current,
+        radius,
+        CIRCLE_SEGMENTS,
+      );
+      setPointCount(pointsRef.current.length);
+      finish();
+    };
+
     const handleMouseMove = (e: MouseEvent) => {
+      if (mode === "circle") {
+        if (!circleCenterRef.current) return;
+        cursor = toLngLat(e);
+        if (rafId !== null) return;
+        rafId = requestAnimationFrame(() => {
+          rafId = null;
+          if (!cursor || !circleCenterRef.current) return;
+          const radius = distanceMeters(circleCenterRef.current, cursor);
+          pointsRef.current = circleToPolygon(
+            circleCenterRef.current,
+            radius,
+            CIRCLE_SEGMENTS,
+          );
+          redrawFill();
+          redrawLine();
+        });
+        return;
+      }
       if (pointsRef.current.length === 0) return;
       cursor = toLngLat(e);
       if (rafId !== null) return;
@@ -189,6 +257,7 @@ export function useDrawPolygon(
     };
 
     const handleDoubleClick = (e: MouseEvent) => {
+      if (mode === "circle") return;
       // Capture bosqichida to'xtatamiz — xaritaning o'z double-click-zoom
       // xatti-harakati ishga tushmasin.
       e.preventDefault();
@@ -202,8 +271,10 @@ export function useDrawPolygon(
     };
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Enter") finish();
+      if (e.key === "Enter" && mode === "polygon") finish();
     };
+
+    const handleClick = mode === "circle" ? handleCircleClick : handlePolygonClick;
 
     // capture:true — mavjud poligonlar/xaritaning o'z ichki handler'laridan oldin ishlaydi.
     container.addEventListener("click", handleClick, true);
@@ -218,7 +289,7 @@ export function useDrawPolygon(
       container.removeEventListener("dblclick", handleDoubleClick, true);
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [mapRef, enabled, phase, redrawLine, redrawFill, finish]);
+  }, [mapRef, enabled, phase, mode, redrawLine, redrawFill, finish]);
 
   const confirmSave = useCallback(async () => {
     const ring = ringRef.current;
@@ -242,6 +313,8 @@ export function useDrawPolygon(
 
   return {
     phase,
+    mode,
+    setMode,
     landCadastralNumber,
     pointCount,
     saving,

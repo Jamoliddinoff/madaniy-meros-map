@@ -68,7 +68,9 @@ export default function TwoGisMap() {
       />
       <DrawPolygonOverlay
         phase={draw.phase}
+        mode={draw.mode}
         pointCount={draw.pointCount}
+        onModeChange={draw.setMode}
         onSave={draw.finish}
         onCancel={draw.cancel}
       />
