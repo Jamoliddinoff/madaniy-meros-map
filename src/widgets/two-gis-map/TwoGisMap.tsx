@@ -36,7 +36,7 @@ export default function TwoGisMap() {
     savedFilter,
   );
   const { search } = useCadastralSearch(mapRef);
-  const filteredNumbers = useFilteredCadastralNumbers(cadastralSet, savedFilter);
+  const filteredNumbers = useFilteredCadastralNumbers(data, savedFilter);
 
   const handleSave = async (record: {
     landCadastralNumber: string;

@@ -27,7 +27,10 @@ const DEFAULT_STROKE = "#00b0f0";
  *  - yer (land) geometriyasi → faqat chegara (ichi bo'yalmagan)
  *  - bino (building) geometriyasi → to'ldirilgan poligon
  * Saqlangan (`cadastralSet` ichidagi) binolar oranj rangda chiziladi.
- * `cadastralSet` o'zgarganda qatlamlar qayta chiziladi (redraw).
+ * `savedFilter` (marked/unmarked) — landCadastralNumber bo'yicha ishlaydi: land
+ * "belgilangan" hisoblanadi agar shu land bo'yicha kamida bitta saqlangan yozuv
+ * (bino yoki qo'lda chizilgan poligon) bo'lsa; shunga qarab butun land (barcha
+ * binolari bilan) ko'rsatiladi yoki hide qilinadi.
  * Bino poligoniga bosilganda tanlangan bino ma'lumotini qaytaradi.
  */
 export function useCadastralLayers(
@@ -49,11 +52,22 @@ export function useCadastralLayers(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const objects: any[] = [];
 
+    // Land "belgilangan" hisoblanadi — shu land bo'yicha kamida bitta saqlangan yozuv bo'lsa
+    const markedLandSet = new Set(
+      savedRecords.map((record) => record.landCadastralNumber),
+    );
+
     // regionSoato `null` bo'lsa (super admin) — barcha viloyatlar; aks holda faqat o'z viloyati
-    const filteredData =
-      regionSoato === null
-        ? data
-        : data.filter((land) => land.regionSoato === regionSoato);
+    // savedFilter — land bo'yicha ishlaydi (marked/unmarked butun landni ko'rsatadi/hide qiladi)
+    const filteredData = data.filter((land) => {
+      if (regionSoato !== null && land.regionSoato !== regionSoato) return false;
+      if (savedFilter === "all") return true;
+      const isMarked = markedLandSet.has(land.landCadastralNumber);
+      return savedFilter === "marked" ? isMarked : !isMarked;
+    });
+    const filteredLandIds = new Set(
+      filteredData.map((land) => land.landCadastralNumber),
+    );
 
     for (const land of filteredData) {
       // Yer chegarasi — faqat border, ichi shaffof; bosilganda land modal (select)
@@ -84,8 +98,6 @@ export function useCadastralLayers(
       for (const building of land.buildings) {
         if (!building.geometry) continue;
         const isSaved = cadastralSet.has(building.cadastralNumber);
-        if (savedFilter === "marked" && !isSaved) continue;
-        if (savedFilter === "unmarked" && isSaved) continue;
         try {
           const polygon = new window.mapgl.Polygon(map, {
             coordinates: parseWktPolygon(building.geometry),
@@ -109,9 +121,11 @@ export function useCadastralLayers(
       }
     }
 
-    // Qo'lda chizib saqlangan poligonlar (cadastralNumber: "DRAWED") — sheet'dan olingan (belgilangan hisoblanadi).
-    for (const record of savedFilter === "unmarked" ? [] : savedRecords) {
+    // Qo'lda chizib saqlangan poligonlar (cadastralNumber: "DRAWED") — sheet'dan olingan.
+    // Faqat joriy filterdan o'tgan (ko'rsatilayotgan) landlarga tegishlilari chiziladi.
+    for (const record of savedRecords) {
       if (!record.poligon) continue;
+      if (!filteredLandIds.has(record.landCadastralNumber)) continue;
       try {
         const coordinates = JSON.parse(record.poligon) as number[][][];
         const drawnPolygon = new window.mapgl.Polygon(map, {
