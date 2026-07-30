@@ -4,7 +4,12 @@ import { parseWktPolygon } from "@/shared/utils/parseWkt";
 import polygonsData from "@/shared/constants/poligons.json";
 import { useRegionSoato } from "@/features/auth/model/region-store";
 import type { CadastralRecord } from "@/shared/api/sheetApi";
-import type { MapRef, PolygonsResponse, CadastralSelection } from "../types";
+import type {
+  MapRef,
+  PolygonsResponse,
+  CadastralSelection,
+  SavedFilterMode,
+} from "../types";
 
 const { data } = polygonsData as PolygonsResponse;
 
@@ -31,6 +36,7 @@ export function useCadastralLayers(
   cadastralSet: Set<string>,
   savedRecords: CadastralRecord[],
   suppressSelectRef?: { current: boolean },
+  savedFilter: SavedFilterMode = "all",
 ) {
   const [selected, setSelected] = useState<CadastralSelection | null>(null);
   const internalSuppressRef = useRef(false);
@@ -78,6 +84,8 @@ export function useCadastralLayers(
       for (const building of land.buildings) {
         if (!building.geometry) continue;
         const isSaved = cadastralSet.has(building.cadastralNumber);
+        if (savedFilter === "marked" && !isSaved) continue;
+        if (savedFilter === "unmarked" && isSaved) continue;
         try {
           const polygon = new window.mapgl.Polygon(map, {
             coordinates: parseWktPolygon(building.geometry),
@@ -101,8 +109,8 @@ export function useCadastralLayers(
       }
     }
 
-    // Qo'lda chizib saqlangan poligonlar (cadastralNumber: "DRAWED") — sheet'dan olingan.
-    for (const record of savedRecords) {
+    // Qo'lda chizib saqlangan poligonlar (cadastralNumber: "DRAWED") — sheet'dan olingan (belgilangan hisoblanadi).
+    for (const record of savedFilter === "unmarked" ? [] : savedRecords) {
       if (!record.poligon) continue;
       try {
         const coordinates = JSON.parse(record.poligon) as number[][][];
@@ -122,7 +130,15 @@ export function useCadastralLayers(
     return () => {
       objects.forEach(destroyMapGLObject);
     };
-  }, [mapRef, enabled, cadastralSet, savedRecords, suppress, regionSoato]);
+  }, [
+    mapRef,
+    enabled,
+    cadastralSet,
+    savedRecords,
+    suppress,
+    regionSoato,
+    savedFilter,
+  ]);
 
   return { selected, clearSelected: () => setSelected(null) };
 }

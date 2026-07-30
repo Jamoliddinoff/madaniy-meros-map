@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useTwoGisMap } from "./hooks/useTwoGisMap";
 import { useUzbekistanMask } from "./hooks/useUzbekistanMask";
 import { useCadastralLayers } from "./hooks/useCadastralLayers";
@@ -6,9 +7,11 @@ import { useCadastralSearch } from "./hooks/useCadastralSearch";
 import { useDrawPolygon } from "./hooks/useDrawPolygon";
 import { CadastralModal } from "./components/CadastralModal";
 import { CadastralSearch } from "./components/CadastralSearch";
+import { SavedFilterTabs } from "./components/SavedFilterTabs";
 import { DrawPolygonOverlay } from "./components/DrawPolygonOverlay";
 import { DrawConfirmModal } from "./components/DrawConfirmModal";
 import { saveCadastral } from "@/shared/api/sheetApi";
+import type { SavedFilterMode } from "./types";
 
 /**
  * To'liq ekranli 2GIS xaritasi + O'zbekiston chegara niqobi (mask)
@@ -21,12 +24,14 @@ export default function TwoGisMap() {
 
   const { data, cadastralSet, refetch } = useCadastralData();
   const draw = useDrawPolygon(mapRef, ready, refetch);
+  const [savedFilter, setSavedFilter] = useState<SavedFilterMode>("all");
   const { selected, clearSelected } = useCadastralLayers(
     mapRef,
     ready,
     cadastralSet,
     data,
     draw.isActiveRef,
+    savedFilter,
   );
   const { search } = useCadastralSearch(mapRef);
 
@@ -55,6 +60,7 @@ export default function TwoGisMap() {
     <>
       <div ref={containerRef} className="h-full w-full" />
       <CadastralSearch onSearch={search} />
+      <SavedFilterTabs value={savedFilter} onChange={setSavedFilter} />
       <CadastralModal
         key={
           selected

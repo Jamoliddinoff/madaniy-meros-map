@@ -33,3 +33,11 @@ export interface CadastralSelection {
   cadastralNumbers: string[];
   isLand: boolean;
 }
+
+/**
+ * Binolarni belgilanganlik bo'yicha filterlash rejimi:
+ *  - all: barchasi ko'rsatiladi
+ *  - marked: faqat belgilangan (google sheet'da cadastralNumberi bor) binolar
+ *  - unmarked: faqat belgilanmagan binolar (belgilanganlar hide qilinadi)
+ */
+export type SavedFilterMode = "all" | "marked" | "unmarked";
