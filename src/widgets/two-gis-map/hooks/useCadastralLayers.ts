@@ -41,6 +41,8 @@ export function useCadastralLayers(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const objects: any[] = [];
 
+    console.log("data---------", data);
+
     for (const land of data) {
       // Yer chegarasi — faqat border, ichi shaffof; bosilganda land modal (select)
       if (land.geometry) {
