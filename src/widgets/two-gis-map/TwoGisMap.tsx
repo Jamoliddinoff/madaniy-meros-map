@@ -4,10 +4,12 @@ import { useUzbekistanMask } from "./hooks/useUzbekistanMask";
 import { useCadastralLayers } from "./hooks/useCadastralLayers";
 import { useCadastralData } from "./hooks/useCadastralData";
 import { useCadastralSearch } from "./hooks/useCadastralSearch";
+import { useFilteredCadastralNumbers } from "./hooks/useFilteredCadastralNumbers";
 import { useDrawPolygon } from "./hooks/useDrawPolygon";
 import { CadastralModal } from "./components/CadastralModal";
 import { CadastralSearch } from "./components/CadastralSearch";
 import { SavedFilterTabs } from "./components/SavedFilterTabs";
+import { CadastralNumberList } from "./components/CadastralNumberList";
 import { DrawPolygonOverlay } from "./components/DrawPolygonOverlay";
 import { DrawConfirmModal } from "./components/DrawConfirmModal";
 import { saveCadastral } from "@/shared/api/sheetApi";
@@ -34,6 +36,7 @@ export default function TwoGisMap() {
     savedFilter,
   );
   const { search } = useCadastralSearch(mapRef);
+  const filteredNumbers = useFilteredCadastralNumbers(cadastralSet, savedFilter);
 
   const handleSave = async (record: {
     landCadastralNumber: string;
@@ -61,6 +64,8 @@ export default function TwoGisMap() {
       <div ref={containerRef} className="h-full w-full" />
       <CadastralSearch onSearch={search} />
       <SavedFilterTabs value={savedFilter} onChange={setSavedFilter} />
+      <CadastralNumberList numbers={filteredNumbers} onSelect={search} />
+
       <CadastralModal
         key={
           selected
