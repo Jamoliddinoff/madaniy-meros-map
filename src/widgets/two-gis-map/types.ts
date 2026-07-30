@@ -13,6 +13,7 @@ export interface BuildingItem {
 export interface LandItem {
   landCadastralNumber: string;
   geometry: string | null;
+  regionSoato: number;
   buildings: BuildingItem[];
 }
 

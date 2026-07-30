@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { destroyMapGLObject } from "@/shared/lib/mapgl";
 import { parseWktPolygon } from "@/shared/utils/parseWkt";
 import polygonsData from "@/shared/constants/poligons.json";
+import { useRegionSoato } from "@/features/auth/model/region-store";
 import type { CadastralRecord } from "@/shared/api/sheetApi";
 import type { MapRef, PolygonsResponse, CadastralSelection } from "../types";
 
@@ -34,6 +35,7 @@ export function useCadastralLayers(
   const [selected, setSelected] = useState<CadastralSelection | null>(null);
   const internalSuppressRef = useRef(false);
   const suppress = suppressSelectRef ?? internalSuppressRef;
+  const regionSoato = useRegionSoato();
 
   useEffect(() => {
     if (!enabled || !mapRef.current || !window.mapgl) return;
@@ -41,9 +43,13 @@ export function useCadastralLayers(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const objects: any[] = [];
 
-    console.log("data---------", data);
+    // regionSoato `null` bo'lsa (super admin) — barcha viloyatlar; aks holda faqat o'z viloyati
+    const filteredData =
+      regionSoato === null
+        ? data
+        : data.filter((land) => land.regionSoato === regionSoato);
 
-    for (const land of data) {
+    for (const land of filteredData) {
       // Yer chegarasi — faqat border, ichi shaffof; bosilganda land modal (select)
       if (land.geometry) {
         try {
@@ -116,7 +122,7 @@ export function useCadastralLayers(
     return () => {
       objects.forEach(destroyMapGLObject);
     };
-  }, [mapRef, enabled, cadastralSet, savedRecords, suppress]);
+  }, [mapRef, enabled, cadastralSet, savedRecords, suppress, regionSoato]);
 
   return { selected, clearSelected: () => setSelected(null) };
 }
