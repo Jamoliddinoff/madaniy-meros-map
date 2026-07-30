@@ -1,8 +1,10 @@
 import type { SavedFilterMode } from "../types";
+import type { LandFilterCounts } from "../hooks/useLandFilterCounts";
 
 interface SavedFilterTabsProps {
   value: SavedFilterMode;
   onChange: (value: SavedFilterMode) => void;
+  counts: LandFilterCounts;
 }
 
 const OPTIONS: { value: SavedFilterMode; label: string }[] = [
@@ -12,7 +14,7 @@ const OPTIONS: { value: SavedFilterMode; label: string }[] = [
 ];
 
 /** Xarita chap yuqorisidagi binolarni belgilanganlik bo'yicha filterlash (tab/segmented). */
-export function SavedFilterTabs({ value, onChange }: SavedFilterTabsProps) {
+export function SavedFilterTabs({ value, onChange, counts }: SavedFilterTabsProps) {
   return (
     <div
       role="tablist"
@@ -32,7 +34,7 @@ export function SavedFilterTabs({ value, onChange }: SavedFilterTabsProps) {
               : "text-neutral-500 hover:bg-neutral-100"
           }`}
         >
-          {option.label}
+           {option.label} <span className="border py-1 px-2 rounded-lg">{counts[option.value]}</span>
         </button>
       ))}
     </div>

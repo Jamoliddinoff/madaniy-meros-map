@@ -5,6 +5,7 @@ import { useCadastralLayers } from "./hooks/useCadastralLayers";
 import { useCadastralData } from "./hooks/useCadastralData";
 import { useCadastralSearch } from "./hooks/useCadastralSearch";
 import { useFilteredCadastralNumbers } from "./hooks/useFilteredCadastralNumbers";
+import { useLandFilterCounts } from "./hooks/useLandFilterCounts";
 import { useDrawPolygon } from "./hooks/useDrawPolygon";
 import { CadastralModal } from "./components/CadastralModal";
 import { CadastralSearch } from "./components/CadastralSearch";
@@ -37,6 +38,7 @@ export default function TwoGisMap() {
   );
   const { search } = useCadastralSearch(mapRef);
   const filteredNumbers = useFilteredCadastralNumbers(data, savedFilter);
+  const filterCounts = useLandFilterCounts(data);
 
   const handleSave = async (record: {
     landCadastralNumber: string;
@@ -63,7 +65,11 @@ export default function TwoGisMap() {
     <>
       <div ref={containerRef} className="h-full w-full" />
       <CadastralSearch onSearch={search} />
-      <SavedFilterTabs value={savedFilter} onChange={setSavedFilter} />
+      <SavedFilterTabs
+        value={savedFilter}
+        onChange={setSavedFilter}
+        counts={filterCounts}
+      />
       <CadastralNumberList numbers={filteredNumbers} onSelect={search} />
 
       <CadastralModal
