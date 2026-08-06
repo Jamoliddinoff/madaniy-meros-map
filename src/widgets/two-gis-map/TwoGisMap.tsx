@@ -7,13 +7,14 @@ import { useCadastralSearch } from "./hooks/useCadastralSearch";
 import { useFilteredCadastralNumbers } from "./hooks/useFilteredCadastralNumbers";
 import { useLandFilterCounts } from "./hooks/useLandFilterCounts";
 import { useDrawPolygon } from "./hooks/useDrawPolygon";
+import { useLandsData } from "./hooks/useLandsData";
+import { useSaveCadastralMutation } from "./hooks/useSaveCadastralMutation";
 import { CadastralModal } from "./components/CadastralModal";
 import { CadastralSearch } from "./components/CadastralSearch";
 import { SavedFilterTabs } from "./components/SavedFilterTabs";
 import { CadastralNumberList } from "./components/CadastralNumberList";
 import { DrawPolygonOverlay } from "./components/DrawPolygonOverlay";
 import { DrawConfirmModal } from "./components/DrawConfirmModal";
-import { saveCadastral } from "@/shared/api/sheetApi";
 import type { SavedFilterMode } from "./types";
 
 /**
@@ -25,20 +26,23 @@ export default function TwoGisMap() {
   const { containerRef, mapRef, ready } = useTwoGisMap();
   useUzbekistanMask(mapRef, ready);
 
-  const { data, cadastralSet, refetch } = useCadastralData();
-  const draw = useDrawPolygon(mapRef, ready, refetch);
+  const { data, cadastralSet } = useCadastralData();
+  const { lands } = useLandsData();
+  const saveMutation = useSaveCadastralMutation();
+  const draw = useDrawPolygon(mapRef, ready);
   const [savedFilter, setSavedFilter] = useState<SavedFilterMode>("all");
   const { selected, clearSelected } = useCadastralLayers(
     mapRef,
     ready,
     cadastralSet,
     data,
+    lands,
     draw.isActiveRef,
     savedFilter,
   );
-  const { search } = useCadastralSearch(mapRef);
-  const filteredNumbers = useFilteredCadastralNumbers(data, savedFilter);
-  const filterCounts = useLandFilterCounts(data);
+  const { search } = useCadastralSearch(mapRef, lands);
+  const filteredNumbers = useFilteredCadastralNumbers(data, savedFilter, lands);
+  const filterCounts = useLandFilterCounts(data, lands);
 
   const handleSave = async (record: {
     landCadastralNumber: string;
@@ -46,13 +50,12 @@ export default function TwoGisMap() {
   }) => {
     await Promise.all(
       record.cadastralNumbers.map((cadastralNumber) =>
-        saveCadastral({
+        saveMutation.mutateAsync({
           landCadastralNumber: record.landCadastralNumber,
           cadastralNumber,
         }),
       ),
     );
-    await refetch();
     clearSelected();
   };
 

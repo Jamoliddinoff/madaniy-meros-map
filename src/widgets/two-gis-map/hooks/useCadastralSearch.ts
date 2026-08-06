@@ -1,9 +1,6 @@
 import { useCallback } from "react";
 import { parseWktPolygon, polygonCenter } from "@/shared/utils/parseWkt";
-import polygonsData from "@/shared/constants/poligons.json";
-import type { MapRef, PolygonsResponse } from "../types";
-
-const { data } = polygonsData as PolygonsResponse;
+import type { MapRef, LandItem } from "../types";
 
 const FOCUS_ZOOM = 18;
 const ANIMATION_MS = 700;
@@ -13,8 +10,8 @@ const ANIMATION_MS = 700;
  * Land topilsa — birinchi navbatda landning o'z geometriyasi ishlatiladi;
  * land geometriyasi bo'lmasa, uning binolari markazlari o'rtachasiga fokus qilinadi.
  */
-function findFocusCenter(query: string): [number, number] | null {
-  for (const land of data) {
+function findFocusCenter(query: string, lands: LandItem[]): [number, number] | null {
+  for (const land of lands) {
     if (land.landCadastralNumber === query) {
       if (land.geometry) {
         return polygonCenter(parseWktPolygon(land.geometry));
@@ -45,21 +42,21 @@ function findFocusCenter(query: string): [number, number] | null {
  * Kadastr raqami bo'yicha qidiradi va topilgan obyektga
  * zoom ~18 bilan animatsiyali fokus qiladi.
  */
-export function useCadastralSearch(mapRef: MapRef) {
+export function useCadastralSearch(mapRef: MapRef, lands: LandItem[]) {
   const search = useCallback(
     (query: string): boolean => {
       const q = query.trim();
       const map = mapRef.current;
       if (!q || !map) return false;
 
-      const center = findFocusCenter(q);
+      const center = findFocusCenter(q, lands);
       if (!center) return false;
 
       map.setCenter(center, { duration: ANIMATION_MS });
       map.setZoom(FOCUS_ZOOM, { duration: ANIMATION_MS });
       return true;
     },
-    [mapRef],
+    [mapRef, lands],
   );
 
   return { search };

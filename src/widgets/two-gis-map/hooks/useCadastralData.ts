@@ -1,37 +1,24 @@
-import { useCallback, useEffect, useState } from "react";
-import { getCadastralList, type CadastralRecord } from "@/shared/api/sheetApi";
+import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { getCadastralList } from "@/shared/api/culturalHeritageApi";
 
-/**
- * Google Sheet'dan saqlangan kadastr yozuvlarini oladi.
- * `refetch` tashqaridan (saqlashdan keyin) chaqirilishi mumkin.
- * `cadastralSet` — ranglash uchun tezkor qidiruv to'plami.
- */
+/** GET /api/cultural-heritage — saqlangan kadastr yozuvlari. `cadastralSet` — ranglash uchun tezkor qidiruv to'plami. */
 export function useCadastralData() {
-  const [data, setData] = useState<CadastralRecord[]>([]);
-  const [cadastralSet, setCadastralSet] = useState<Set<string>>(new Set());
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+  const query = useQuery({
+    queryKey: ["cultural-heritage"],
+    queryFn: getCadastralList,
+  });
 
-  const refetch = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const list = await getCadastralList();
-      console.log("list------------------",list)
-      setData(list);
-      setCadastralSet(new Set(list.map((item) => item.cadastralNumber)));
-    } catch (e) {
-      setError(e as Error);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const cadastralSet = useMemo(
+    () => new Set((query.data ?? []).map((item) => item.cadastralNumber)),
+    [query.data],
+  );
 
-  useEffect(() => {
-    // Mount'da bir marta yuklaymiz; setState async fetch'dan keyin bo'ladi
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    void refetch();
-  }, [refetch]);
-
-  return { data, cadastralSet, loading, error, refetch };
+  return {
+    data: query.data ?? [],
+    cadastralSet,
+    loading: query.isLoading,
+    error: query.error,
+    refetch: query.refetch,
+  };
 }

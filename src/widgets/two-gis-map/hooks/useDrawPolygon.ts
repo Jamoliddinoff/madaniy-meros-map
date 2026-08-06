@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { destroyMapGLObject } from "@/shared/lib/mapgl";
-import { saveCadastral } from "@/shared/api/sheetApi";
+import { useSaveCadastralMutation } from "./useSaveCadastralMutation";
 import { useToast } from "@/shared/ui/toast/toast-context";
 import { circleToPolygon, distanceMeters } from "../lib/geo";
 import type { MapRef } from "../types";
@@ -22,18 +22,14 @@ const CIRCLE_SEGMENTS = 64;
  * poligonlari) bilan aralashmasligi uchun to'g'ridan-to'g'ri xarita konteyneri
  * (DOM) ustida tinglanadi — shu sababli mavjud poligonlar ustida ham chizish mumkin.
  */
-export function useDrawPolygon(
-  mapRef: MapRef,
-  enabled: boolean,
-  onSaved: () => Promise<void>,
-) {
+export function useDrawPolygon(mapRef: MapRef, enabled: boolean) {
   const [phase, setPhase] = useState<DrawPhase>("idle");
   const [mode, setModeState] = useState<DrawMode>("polygon");
   const [landCadastralNumber, setLandCadastralNumber] = useState<
     string | null
   >(null);
   const [pointCount, setPointCount] = useState(0);
-  const [saving, setSaving] = useState(false);
+  const saveMutation = useSaveCadastralMutation();
   const { showToast } = useToast();
 
   const pointsRef = useRef<[number, number][]>([]);
@@ -294,22 +290,18 @@ export function useDrawPolygon(
   const confirmSave = useCallback(async () => {
     const ring = ringRef.current;
     if (!landCadastralNumber || !ring) return;
-    setSaving(true);
     try {
-      await saveCadastral({
+      await saveMutation.mutateAsync({
         landCadastralNumber,
         cadastralNumber: "DRAWED",
         poligon: JSON.stringify([ring]),
       });
-      await onSaved();
       showToast("Poligon muvaffaqiyatli biriktirildi", "success");
       cancel();
     } catch {
       showToast("Saqlashda xatolik yuz berdi", "error");
-    } finally {
-      setSaving(false);
     }
-  }, [landCadastralNumber, onSaved, showToast, cancel]);
+  }, [landCadastralNumber, saveMutation, showToast, cancel]);
 
   return {
     phase,
@@ -317,7 +309,7 @@ export function useDrawPolygon(
     setMode,
     landCadastralNumber,
     pointCount,
-    saving,
+    saving: saveMutation.isPending,
     isActiveRef,
     start,
     cancel,

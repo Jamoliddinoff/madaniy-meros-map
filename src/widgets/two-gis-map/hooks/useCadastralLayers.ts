@@ -1,17 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { destroyMapGLObject } from "@/shared/lib/mapgl";
 import { parseWktPolygon } from "@/shared/utils/parseWkt";
-import polygonsData from "@/shared/constants/poligons.json";
 import { useRegionSoato } from "@/features/auth/model/region-store";
-import type { CadastralRecord } from "@/shared/api/sheetApi";
+import type { CadastralRecord } from "@/shared/api/culturalHeritageApi";
 import type {
   MapRef,
-  PolygonsResponse,
+  LandItem,
   CadastralSelection,
   SavedFilterMode,
 } from "../types";
-
-const { data } = polygonsData as PolygonsResponse;
 
 // Saqlangan (madaniy meros) bino rangi
 const SAVED_COLOR = "rgba(255,140,0,0.5)";
@@ -38,6 +35,7 @@ export function useCadastralLayers(
   enabled: boolean,
   cadastralSet: Set<string>,
   savedRecords: CadastralRecord[],
+  lands: LandItem[],
   suppressSelectRef?: { current: boolean },
   savedFilter: SavedFilterMode = "all",
 ) {
@@ -59,7 +57,7 @@ export function useCadastralLayers(
 
     // regionSoato `null` bo'lsa (super admin) — barcha viloyatlar; aks holda faqat o'z viloyati
     // savedFilter — land bo'yicha ishlaydi (marked/unmarked butun landni ko'rsatadi/hide qiladi)
-    const filteredData = data.filter((land) => {
+    const filteredData = lands.filter((land) => {
       if (regionSoato !== null && land.regionSoato !== regionSoato) return false;
       if (savedFilter === "all") return true;
       const isMarked = markedLandSet.has(land.landCadastralNumber);
@@ -149,6 +147,7 @@ export function useCadastralLayers(
     enabled,
     cadastralSet,
     savedRecords,
+    lands,
     suppress,
     regionSoato,
     savedFilter,
