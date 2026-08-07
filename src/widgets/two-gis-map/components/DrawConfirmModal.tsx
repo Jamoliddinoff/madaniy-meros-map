@@ -1,4 +1,5 @@
 import { Modal } from "@/shared/ui/Modal";
+import { Spinner } from "@/shared/ui/Spinner";
 
 interface DrawConfirmModalProps {
   open: boolean;
@@ -28,8 +29,9 @@ export function DrawConfirmModal({
             type="button"
             onClick={onConfirm}
             disabled={saving}
-            className="flex-1 rounded-lg bg-primary-600 py-2.5 font-medium text-neutral-0 transition-colors hover:bg-primary-700 disabled:opacity-60"
+            className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-primary-600 py-2.5 font-medium text-neutral-0 transition-colors hover:bg-primary-700 disabled:opacity-60"
           >
+            {saving && <Spinner className="h-4 w-4 text-neutral-0" />}
             {saving ? "Saqlanmoqda..." : "Ha"}
           </button>
           <button

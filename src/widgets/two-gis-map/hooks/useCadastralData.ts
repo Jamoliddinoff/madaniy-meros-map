@@ -18,6 +18,7 @@ export function useCadastralData() {
     data: query.data ?? [],
     cadastralSet,
     loading: query.isLoading,
+    fetching: query.isFetching,
     error: query.error,
     refetch: query.refetch,
   };

@@ -15,6 +15,7 @@ import { SavedFilterTabs } from "./components/SavedFilterTabs";
 import { CadastralNumberList } from "./components/CadastralNumberList";
 import { DrawPolygonOverlay } from "./components/DrawPolygonOverlay";
 import { DrawConfirmModal } from "./components/DrawConfirmModal";
+import { MapLoadingIndicator } from "./components/MapLoadingIndicator";
 import type { SavedFilterMode } from "./types";
 
 /**
@@ -26,10 +27,11 @@ export default function TwoGisMap() {
   const { containerRef, mapRef, ready } = useTwoGisMap();
   useUzbekistanMask(mapRef, ready);
 
-  const { data, cadastralSet } = useCadastralData();
-  const { lands } = useLandsData();
+  const { data, cadastralSet, fetching: cadastralFetching } = useCadastralData();
+  const { lands, fetching: landsFetching } = useLandsData();
   const saveMutation = useSaveCadastralMutation();
   const draw = useDrawPolygon(mapRef, ready);
+  const isSyncing = landsFetching || cadastralFetching || saveMutation.isPending;
   const [savedFilter, setSavedFilter] = useState<SavedFilterMode>("all");
   const { selected, clearSelected } = useCadastralLayers(
     mapRef,
@@ -67,6 +69,7 @@ export default function TwoGisMap() {
   return (
     <>
       <div ref={containerRef} className="h-full w-full" />
+      <MapLoadingIndicator active={isSyncing} />
       <CadastralSearch onSearch={search} />
       <SavedFilterTabs
         value={savedFilter}

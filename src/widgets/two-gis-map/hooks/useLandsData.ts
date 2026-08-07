@@ -14,6 +14,7 @@ export function useLandsData() {
   return {
     lands: query.data?.data ?? [],
     loading: query.isLoading,
+    fetching: query.isFetching,
     error: query.error,
     refetch: query.refetch,
   };
