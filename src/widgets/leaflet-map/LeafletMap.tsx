@@ -1,6 +1,11 @@
-import { useState } from "react";
-import { useTwoGisMap } from "./hooks/useTwoGisMap";
-import { useUzbekistanMask } from "./hooks/useUzbekistanMask";
+import { useRef, useState } from "react";
+import { MapContainer, TileLayer, ZoomControl } from "react-leaflet";
+import type L from "leaflet";
+import "leaflet/dist/leaflet.css";
+import { TILE_ATTRIBUTION, TILE_URL_LIGHT, UZ_CENTER, UZ_ZOOM } from "@/shared/lib/leaflet";
+import { MapRefCapture } from "./components/MapRefCapture";
+import { MapResizeWatcher } from "./components/MapResizeWatcher";
+import { UzbekistanMask } from "./components/UzbekistanMask";
 import { useCadastralLayers } from "./hooks/useCadastralLayers";
 import { useCadastralData } from "./hooks/useCadastralData";
 import { useCadastralSearch } from "./hooks/useCadastralSearch";
@@ -19,13 +24,13 @@ import { MapLoadingIndicator } from "./components/MapLoadingIndicator";
 import type { SavedFilterMode } from "./types";
 
 /**
- * To'liq ekranli 2GIS xaritasi + O'zbekiston chegara niqobi (mask)
+ * To'liq ekranli Leaflet xaritasi + O'zbekiston chegara niqobi (mask)
  * + kadastr qatlamlari (yer chegarasi, bino poligonlari, saqlanganlar oranj)
  * + saqlash modal oynasi + landga qo'lda poligon chizib biriktirish.
  */
-export default function TwoGisMap() {
-  const { containerRef, mapRef, ready } = useTwoGisMap();
-  useUzbekistanMask(mapRef, ready);
+export default function LeafletMap() {
+  const mapRef = useRef<L.Map | null>(null);
+  const [ready, setReady] = useState(false);
 
   const { data, cadastralSet, fetching: cadastralFetching } = useCadastralData();
   const { lands, fetching: landsFetching } = useLandsData();
@@ -68,7 +73,20 @@ export default function TwoGisMap() {
 
   return (
     <>
-      <div ref={containerRef} className="h-full w-full" />
+      <MapContainer
+        center={UZ_CENTER}
+        zoom={UZ_ZOOM}
+        className="h-full w-full"
+        scrollWheelZoom
+        zoomControl={false}
+        attributionControl={false}
+      >
+        <TileLayer url={TILE_URL_LIGHT} attribution={TILE_ATTRIBUTION} />
+        <ZoomControl position="bottomright" />
+        <MapRefCapture mapRef={mapRef} onReady={() => setReady(true)} />
+        <MapResizeWatcher />
+        <UzbekistanMask />
+      </MapContainer>
       <MapLoadingIndicator active={isSyncing} />
       <CadastralSearch onSearch={search} />
       <SavedFilterTabs

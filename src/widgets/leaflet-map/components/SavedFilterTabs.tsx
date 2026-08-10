@@ -19,7 +19,7 @@ export function SavedFilterTabs({ value, onChange, counts }: SavedFilterTabsProp
     <div
       role="tablist"
       aria-label="Binolarni belgilanganlik bo'yicha filterlash"
-      className="absolute left-4 top-20 z-sticky flex gap-1 rounded-xl bg-neutral-0/95 p-1 shadow-header backdrop-blur"
+      className="absolute left-4 top-20 z-map-overlay flex gap-1 rounded-xl bg-neutral-0/95 p-1 shadow-header backdrop-blur"
     >
       {OPTIONS.map((option) => (
         <button

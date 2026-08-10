@@ -1,7 +1,7 @@
 import { lazy, Suspense } from "react";
 import { useAuth } from "@/features/auth/model/auth-context";
 
-const TwoGisMap = lazy(() => import("@/widgets/two-gis-map/TwoGisMap"));
+const LeafletMap = lazy(() => import("@/widgets/leaflet-map/LeafletMap"));
 
 export default function MapPage() {
   const { logout } = useAuth();
@@ -12,7 +12,7 @@ export default function MapPage() {
         type="button"
         onClick={logout}
         aria-label="Chiqish"
-        className="absolute right-4 top-4 z-sticky rounded-lg bg-neutral-0/90 px-4 py-2 text-sm font-medium text-neutral-900 shadow-header backdrop-blur transition-colors hover:bg-neutral-0"
+        className="absolute right-4 top-4 z-map-overlay rounded-lg bg-neutral-0/90 px-4 py-2 text-sm font-medium text-neutral-900 shadow-header backdrop-blur transition-colors hover:bg-neutral-0"
       >
         Chiqish
       </button>
@@ -24,7 +24,7 @@ export default function MapPage() {
           </div>
         }
       >
-        <TwoGisMap />
+        <LeafletMap />
       </Suspense>
     </div>
   );
