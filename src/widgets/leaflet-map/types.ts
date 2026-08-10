@@ -1,7 +1,7 @@
 import type { MutableRefObject } from "react";
+import type L from "leaflet";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type MapRef = MutableRefObject<any>;
+export type MapRef = MutableRefObject<L.Map | null>;
 
 export type {
   BuildingItem,

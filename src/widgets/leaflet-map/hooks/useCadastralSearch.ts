@@ -3,7 +3,7 @@ import { parseWktPolygon, polygonCenter } from "@/shared/utils/parseWkt";
 import type { MapRef, LandItem } from "../types";
 
 const FOCUS_ZOOM = 18;
-const ANIMATION_MS = 700;
+const ANIMATION_SECONDS = 0.7;
 
 /**
  * Kadastr raqami bo'yicha (land yoki bino) fokus markazini topadi.
@@ -52,8 +52,8 @@ export function useCadastralSearch(mapRef: MapRef, lands: LandItem[]) {
       const center = findFocusCenter(q, lands);
       if (!center) return false;
 
-      map.setCenter(center, { duration: ANIMATION_MS });
-      map.setZoom(FOCUS_ZOOM, { duration: ANIMATION_MS });
+      const [lng, lat] = center;
+      map.flyTo([lat, lng], FOCUS_ZOOM, { duration: ANIMATION_SECONDS });
       return true;
     },
     [mapRef, lands],

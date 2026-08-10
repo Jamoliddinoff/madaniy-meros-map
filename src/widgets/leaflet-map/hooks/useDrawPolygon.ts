@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { destroyMapGLObject } from "@/shared/lib/mapgl";
+import L from "leaflet";
+import { destroyLeafletLayer } from "@/shared/lib/leaflet";
 import { useSaveCadastralMutation } from "./useSaveCadastralMutation";
 import { useToast } from "@/shared/ui/toast/toast-context";
 import { circleToPolygon, distanceMeters } from "../lib/geo";
@@ -8,17 +9,22 @@ import type { MapRef } from "../types";
 export type DrawPhase = "idle" | "drawing" | "confirming";
 export type DrawMode = "polygon" | "circle";
 
-const DRAFT_COLOR = "rgba(155,81,224,0.35)";
+const DRAFT_FILL = "#9b51e0";
 const DRAFT_STROKE = "#9b51e0";
 export const MIN_POINTS = 3;
 const CIRCLE_SEGMENTS = 64;
+
+/** Ichki nuqta ro'yxati ([lng,lat]) — Leaflet uchun ([lat,lng]) ga aylantiradi. */
+function toLatLngs(points: [number, number][]): [number, number][] {
+  return points.map(([lng, lat]) => [lat, lng]);
+}
 
 /**
  * Landga qo'lda yangi poligon (bino) biriktirish jarayoni:
  * chizish (click bilan nuqta qo'shish; Saqlash tugmasi, Enter yoki double-click
  * bilan yakunlash) → tasdiqlash (modal) → saqlash (cadastralNumber: "DRAWED", poligon: JSON).
  *
- * Nuqta va chiziq/hover eventlari mapgl'ning object-level click'lari (bino/land
+ * Nuqta va chiziq/hover eventlari Leaflet'ning object-level click'lari (bino/land
  * poligonlari) bilan aralashmasligi uchun to'g'ridan-to'g'ri xarita konteyneri
  * (DOM) ustida tinglanadi — shu sababli mavjud poligonlar ustida ham chizish mumkin.
  */
@@ -35,26 +41,23 @@ export function useDrawPolygon(mapRef: MapRef, enabled: boolean) {
   const pointsRef = useRef<[number, number][]>([]);
   const ringRef = useRef<[number, number][] | null>(null);
   const circleCenterRef = useRef<[number, number] | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const previewLineRef = useRef<any>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const previewFillRef = useRef<any>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const finalPolygonRef = useRef<any>(null);
+  const previewLineRef = useRef<L.Polyline | null>(null);
+  const previewFillRef = useRef<L.Polygon | null>(null);
+  const finalPolygonRef = useRef<L.Polygon | null>(null);
   const isActiveRef = useRef(false);
 
   const clearLine = useCallback(() => {
-    destroyMapGLObject(previewLineRef.current);
+    destroyLeafletLayer(previewLineRef.current);
     previewLineRef.current = null;
   }, []);
 
   const clearFill = useCallback(() => {
-    destroyMapGLObject(previewFillRef.current);
+    destroyLeafletLayer(previewFillRef.current);
     previewFillRef.current = null;
   }, []);
 
   const clearFinal = useCallback(() => {
-    destroyMapGLObject(finalPolygonRef.current);
+    destroyLeafletLayer(finalPolygonRef.current);
     finalPolygonRef.current = null;
   }, []);
 
@@ -63,13 +66,12 @@ export function useDrawPolygon(mapRef: MapRef, enabled: boolean) {
     const map = mapRef.current;
     clearFill();
     const points = pointsRef.current;
-    if (!map || !window.mapgl || points.length < MIN_POINTS) return;
-    previewFillRef.current = new window.mapgl.Polygon(map, {
-      coordinates: [[...points, points[0]]],
-      color: DRAFT_COLOR,
-      strokeWidth: 0,
-      zIndex: 30,
-    });
+    if (!map || points.length < MIN_POINTS) return;
+    previewFillRef.current = L.polygon(toLatLngs([...points, points[0]]), {
+      fillColor: DRAFT_FILL,
+      fillOpacity: 0.35,
+      weight: 0,
+    }).addTo(map);
   }, [mapRef, clearFill]);
 
   /** Dashed border, kursorni kuzatib turadi — mousemove'da (rAF bilan) qayta chiziladi (yengil). */
@@ -78,17 +80,14 @@ export function useDrawPolygon(mapRef: MapRef, enabled: boolean) {
       const map = mapRef.current;
       clearLine();
       const points = pointsRef.current;
-      if (!map || !window.mapgl || points.length === 0) return;
+      if (!map || points.length === 0) return;
       const open = cursor ? [...points, cursor] : [...points];
       const ring = open.length >= 2 ? [...open, points[0]] : open;
-      previewLineRef.current = new window.mapgl.Polyline(map, {
-        coordinates: ring,
+      previewLineRef.current = L.polyline(toLatLngs(ring), {
         color: DRAFT_STROKE,
-        width: 2,
-        dashLength: 8,
-        gapLength: 6,
-        zIndex: 31,
-      });
+        weight: 2,
+        dashArray: "8 6",
+      }).addTo(map);
     },
     [mapRef, clearLine],
   );
@@ -134,7 +133,7 @@ export function useDrawPolygon(mapRef: MapRef, enabled: boolean) {
   /** Chizishni yakunlaydi va tasdiqlash oynasini ochadi (Saqlash tugmasi/Enter/double-click). */
   const finish = useCallback(() => {
     const map = mapRef.current;
-    if (!map || !window.mapgl) return;
+    if (!map) return;
     const points = pointsRef.current;
     if (points.length < MIN_POINTS) {
       showToast(
@@ -147,13 +146,12 @@ export function useDrawPolygon(mapRef: MapRef, enabled: boolean) {
     clearFill();
     const ring = [...points, points[0]];
     ringRef.current = ring;
-    finalPolygonRef.current = new window.mapgl.Polygon(map, {
-      coordinates: [ring],
-      color: DRAFT_COLOR,
-      strokeColor: DRAFT_STROKE,
-      strokeWidth: 2,
-      zIndex: 30,
-    });
+    finalPolygonRef.current = L.polygon(toLatLngs(ring), {
+      fillColor: DRAFT_FILL,
+      fillOpacity: 0.35,
+      color: DRAFT_STROKE,
+      weight: 2,
+    }).addTo(map);
     setPhase("confirming");
   }, [mapRef, clearLine, clearFill, showToast]);
 
@@ -176,20 +174,22 @@ export function useDrawPolygon(mapRef: MapRef, enabled: boolean) {
   // dblclick/Enter (yakunlash).
   useEffect(() => {
     isActiveRef.current = phase !== "idle";
-    if (phase !== "drawing" || !enabled || !mapRef.current || !window.mapgl)
-      return;
+    if (phase !== "drawing" || !enabled || !mapRef.current) return;
     const map = mapRef.current;
-    const container: HTMLElement | undefined = map.getContainer?.();
+    const container: HTMLElement = map.getContainer();
     if (!container) return;
+
+    // Leaflet'ning o'z dblclick-zoom xatti-harakati chizish jarayoniga xalaqit bermasin.
+    map.doubleClickZoom.disable();
 
     let rafId: number | null = null;
     let cursor: [number, number] | null = null;
 
     const toLngLat = (e: MouseEvent): [number, number] => {
       const rect = container.getBoundingClientRect();
-      const point = [e.clientX - rect.left, e.clientY - rect.top];
-      const [lng, lat] = map.unproject(point);
-      return [lng, lat];
+      const point = L.point(e.clientX - rect.left, e.clientY - rect.top);
+      const latlng = map.containerPointToLatLng(point);
+      return [latlng.lng, latlng.lat];
     };
 
     const handlePolygonClick = (e: MouseEvent) => {
@@ -280,6 +280,7 @@ export function useDrawPolygon(mapRef: MapRef, enabled: boolean) {
 
     return () => {
       if (rafId !== null) cancelAnimationFrame(rafId);
+      map.doubleClickZoom.enable();
       container.removeEventListener("click", handleClick, true);
       container.removeEventListener("mousemove", handleMouseMove, true);
       container.removeEventListener("dblclick", handleDoubleClick, true);

@@ -23,7 +23,7 @@ export function CadastralSearch({ onSearch }: CadastralSearchProps) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="absolute left-4 top-4 z-sticky flex w-[400px]  gap-2 rounded-xl bg-neutral-0/95 p-2 shadow-header backdrop-blur bg-transparent"
+      className="absolute left-4 top-4 z-map-overlay flex w-[400px]  gap-2 rounded-xl bg-neutral-0/95 p-2 shadow-header backdrop-blur bg-transparent"
     >
       <input
         type="text"

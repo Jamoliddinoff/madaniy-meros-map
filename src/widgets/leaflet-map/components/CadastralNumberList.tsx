@@ -20,7 +20,7 @@ export function CadastralNumberList({
     : numbers;
 
   return (
-    <div className="absolute left-4 top-32 z-sticky flex max-h-[50vh] w-[300px] flex-col rounded-xl bg-neutral-0/95 p-2 shadow-header backdrop-blur">
+    <div className="absolute left-4 top-32 z-map-overlay flex max-h-[50vh] w-[300px] flex-col rounded-xl bg-neutral-0/95 p-2 shadow-header backdrop-blur">
       <input
         type="text"
         value={query}

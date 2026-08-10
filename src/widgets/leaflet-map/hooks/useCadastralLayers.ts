@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { destroyMapGLObject } from "@/shared/lib/mapgl";
+import L from "leaflet";
+import { destroyLeafletLayer } from "@/shared/lib/leaflet";
 import { parseWktPolygon } from "@/shared/utils/parseWkt";
 import { useRegionSoato } from "@/features/auth/model/region-store";
 import type { CadastralRecord } from "@/shared/api/culturalHeritageApi";
@@ -11,13 +12,18 @@ import type {
 } from "../types";
 
 // Saqlangan (madaniy meros) bino rangi
-const SAVED_COLOR = "rgba(255,140,0,0.5)";
+const SAVED_FILL = "#FF8C00";
 const SAVED_STROKE = "#FF8C00";
-const DROWED_COLOR = "#d15cff";
+const DROWED_FILL = "#d15cff";
 const DROWED_STROKE = "#790095";
 // Standart bino rangi
-const DEFAULT_COLOR = "rgba(0,176,240,0.35)";
+const DEFAULT_FILL = "#00b0f0";
 const DEFAULT_STROKE = "#00b0f0";
+
+/** WKT (lng,lat) ringlarni Leaflet uchun (lat,lng) ga aylantiradi. */
+function toLatLngRings(rings: [number, number][][]): [number, number][][] {
+  return rings.map((ring) => ring.map(([lng, lat]) => [lat, lng] as [number, number]));
+}
 
 /**
  * poligons.json asosida qatlamlarni chizadi:
@@ -45,10 +51,9 @@ export function useCadastralLayers(
   const regionSoato = useRegionSoato();
 
   useEffect(() => {
-    if (!enabled || !mapRef.current || !window.mapgl) return;
+    if (!enabled || !mapRef.current) return;
     const map = mapRef.current;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const objects: any[] = [];
+    const layers: L.Layer[] = [];
 
     // Land "belgilangan" hisoblanadi — shu land bo'yicha kamida bitta saqlangan yozuv bo'lsa
     const markedLandSet = new Set(
@@ -71,13 +76,14 @@ export function useCadastralLayers(
       // Yer chegarasi — faqat border, ichi shaffof; bosilganda land modal (select)
       if (land.geometry) {
         try {
-          const landPolygon = new window.mapgl.Polygon(map, {
-            coordinates: parseWktPolygon(land.geometry),
-            color: "rgba(0,0,0,0)",
-            strokeColor: "#2957a5",
-            strokeWidth: 2,
-            zIndex: 10,
-          });
+          const landPolygon = L.polygon(
+            toLatLngRings(parseWktPolygon(land.geometry)),
+            {
+              fillOpacity: 0,
+              color: "#2957a5",
+              weight: 2,
+            },
+          ).addTo(map);
           landPolygon.on("click", () => {
             if (suppress.current) return;
             setSelected({
@@ -86,7 +92,7 @@ export function useCadastralLayers(
               isLand: true,
             });
           });
-          objects.push(landPolygon);
+          layers.push(landPolygon);
         } catch (e) {
           console.warn("Land polygon error:", e);
         }
@@ -97,13 +103,15 @@ export function useCadastralLayers(
         if (!building.geometry) continue;
         const isSaved = cadastralSet.has(building.cadastralNumber);
         try {
-          const polygon = new window.mapgl.Polygon(map, {
-            coordinates: parseWktPolygon(building.geometry),
-            color: isSaved ? SAVED_COLOR : DEFAULT_COLOR,
-            strokeColor: isSaved ? SAVED_STROKE : DEFAULT_STROKE,
-            strokeWidth: isSaved ? 2 : 1,
-            zIndex: 20,
-          });
+          const polygon = L.polygon(
+            toLatLngRings(parseWktPolygon(building.geometry)),
+            {
+              fillColor: isSaved ? SAVED_FILL : DEFAULT_FILL,
+              fillOpacity: isSaved ? 0.5 : 0.35,
+              color: isSaved ? SAVED_STROKE : DEFAULT_STROKE,
+              weight: isSaved ? 2 : 1,
+            },
+          ).addTo(map);
           polygon.on("click", () => {
             if (suppress.current) return;
             setSelected({
@@ -112,7 +120,7 @@ export function useCadastralLayers(
               isLand: false,
             });
           });
-          objects.push(polygon);
+          layers.push(polygon);
         } catch (e) {
           console.warn("Building polygon error:", e);
         }
@@ -126,21 +134,23 @@ export function useCadastralLayers(
       if (!filteredLandIds.has(record.landCadastralNumber)) continue;
       try {
         const coordinates = JSON.parse(record.poligon) as number[][][];
-        const drawnPolygon = new window.mapgl.Polygon(map, {
-          coordinates,
-          color: DROWED_COLOR,
-          strokeColor: DROWED_STROKE,
-          strokeWidth: 2,
-          zIndex: 20,
-        });
-        objects.push(drawnPolygon);
+        const drawnPolygon = L.polygon(
+          toLatLngRings(coordinates as [number, number][][]),
+          {
+            fillColor: DROWED_FILL,
+            fillOpacity: 1,
+            color: DROWED_STROKE,
+            weight: 2,
+          },
+        ).addTo(map);
+        layers.push(drawnPolygon);
       } catch (e) {
         console.warn("Drawn polygon parse error:", e);
       }
     }
 
     return () => {
-      objects.forEach(destroyMapGLObject);
+      layers.forEach(destroyLeafletLayer);
     };
   }, [
     mapRef,

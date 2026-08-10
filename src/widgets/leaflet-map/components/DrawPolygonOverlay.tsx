@@ -39,12 +39,12 @@ export function DrawPolygonOverlay({
 
   return (
       <div>
-        <div className="absolute right-[50%] translate-x-[50%] top-4 z-sticky flex flex-col items-end gap-2">
+        <div className="absolute right-[50%] translate-x-[50%] top-4 z-map-overlay flex flex-col items-end gap-2">
           <p className="max-w-lg rounded-lg bg-neutral-0/95 px-3 py-2 text-center text-sm text-neutral-900 shadow-header backdrop-blur">
             {getGuideText(mode, pointCount)}
           </p>
         </div>
-        <div className="absolute right-4 top-4 z-sticky flex flex-col items-end gap-2">
+        <div className="absolute right-4 top-4 z-map-overlay flex flex-col items-end gap-2">
           <DrawModeDropdown mode={mode} onChange={onModeChange} />
           <div className="flex gap-2">
             {mode === "polygon" && (
