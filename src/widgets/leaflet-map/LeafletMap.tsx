@@ -2,7 +2,14 @@ import { useRef, useState } from "react";
 import { MapContainer, TileLayer, ZoomControl } from "react-leaflet";
 import type L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { TILE_ATTRIBUTION, TILE_URL_LIGHT, UZ_CENTER, UZ_ZOOM } from "@/shared/lib/leaflet";
+import {
+  MAP_MAX_ZOOM,
+  TILE_ATTRIBUTION,
+  TILE_MAX_NATIVE_ZOOM,
+  TILE_URL_LIGHT,
+  UZ_CENTER,
+  UZ_ZOOM,
+} from "@/shared/lib/leaflet";
 import { MapRefCapture } from "./components/MapRefCapture";
 import { MapResizeWatcher } from "./components/MapResizeWatcher";
 import { UzbekistanMask } from "./components/UzbekistanMask";
@@ -76,12 +83,18 @@ export default function LeafletMap() {
       <MapContainer
         center={UZ_CENTER}
         zoom={UZ_ZOOM}
+        maxZoom={MAP_MAX_ZOOM}
         className="h-full w-full"
         scrollWheelZoom
         zoomControl={false}
         attributionControl={false}
       >
-        <TileLayer url={TILE_URL_LIGHT} attribution={TILE_ATTRIBUTION} />
+        <TileLayer
+          url={TILE_URL_LIGHT}
+          attribution={TILE_ATTRIBUTION}
+          maxZoom={MAP_MAX_ZOOM}
+          maxNativeZoom={TILE_MAX_NATIVE_ZOOM}
+        />
         <ZoomControl position="bottomright" />
         <MapRefCapture mapRef={mapRef} onReady={() => setReady(true)} />
         <MapResizeWatcher />
